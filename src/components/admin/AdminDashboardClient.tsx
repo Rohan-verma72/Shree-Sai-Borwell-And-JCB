@@ -71,6 +71,8 @@ type Equipment = {
   farmerDailyRate: number;
   farmerMonthlyRate: number;
   farmerHourlyRate: number;
+  image?: string;
+  description?: string;
 };
 
 type NotificationItem = {

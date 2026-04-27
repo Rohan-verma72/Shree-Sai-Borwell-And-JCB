@@ -10,11 +10,11 @@
     <relativePath/>
   </parent>
 
-  <groupId>com.demo4</groupId>
-  <artifactId>equipment-rental-api</artifactId>
+  <groupId>com.shreesai</groupId>
+  <artifactId>shree-sai-borewell-api</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>equipment-rental-api</name>
-  <description>Spring Boot backend for the Demo4 equipment rental app</description>
+  <name>shree-sai-borewell-api</name>
+  <description>Spring Boot backend for Shree Sai Borewell & JCB equipment rental app</description>
 
   <properties>
     <java.version>21</java.version>

@@ -3,7 +3,7 @@ import 'server-only';
 import fs from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
-import type { Booking, DbData, Stats } from '@/data/types';
+import type { Booking, DbData, Equipment, Stats } from '@/data/types';
 
 export type { Booking, DbData, Equipment, Stats } from '@/data/types';
 
