@@ -1,0 +1,374 @@
+.bookings-page {
+          padding: 7rem 0 5rem;
+        }
+
+        .page-header {
+          display: flex;
+          justify-content: space-between;
+          gap: 2rem;
+          align-items: flex-start;
+          padding: 2rem 0 3rem;
+        }
+
+        .eyebrow {
+          display: inline-block;
+          text-transform: uppercase;
+          letter-spacing: 0.16em;
+          color: var(--primary);
+          font-size: 0.72rem;
+        }
+
+        .page-header h1 {
+          max-width: 700px;
+          font-size: clamp(2rem, 4vw, 3.4rem);
+          line-height: 1.05;
+          margin-top: 0.7rem;
+        }
+
+        .page-header p,
+        .summary-card p,
+        .empty-card,
+        .muted {
+          color: var(--text-dim);
+          margin-bottom: 2rem;
+        }
+
+        .search-box {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+          max-width: 500px;
+          border-radius: 999px;
+          margin-top: 1.5rem;
+        }
+
+        .search-box input {
+          background: transparent;
+          border: none;
+          color: #fff;
+          font-size: 1.1rem;
+          flex: 1;
+          outline: none;
+        }
+
+        .search-submit {
+          background: var(--primary);
+          color: #000;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 999px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .search-submit:hover {
+          filter: brightness(1.1);
+        }
+
+        .header-stat {
+          min-width: 220px;
+          padding: 1.4rem;
+          border-radius: 18px;
+        }
+
+        .header-stat span,
+        .header-stat small {
+          display: block;
+        }
+
+        .header-stat span {
+          color: var(--text-dim);
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          font-size: 0.75rem;
+        }
+
+        .header-stat strong {
+          display: block;
+          font-size: 2.4rem;
+          margin: 0.25rem 0;
+        }
+
+        .layout-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 300px;
+          gap: 2rem;
+        }
+
+        .tabs {
+          display: flex;
+          gap: 1rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+          padding: 0.85rem 1.1rem;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.04);
+          color: var(--text-dim);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          font-weight: 700;
+        }
+
+        .tab-btn.active {
+          color: var(--primary);
+          background: rgba(247, 201, 72, 0.12);
+          border-color: rgba(247, 201, 72, 0.45);
+        }
+
+        .order-list {
+          display: grid;
+          gap: 1rem;
+        }
+
+        .order-card,
+        .empty-card,
+        .info-card {
+          padding: 1.5rem;
+          border-radius: 18px;
+        }
+
+        .order-top,
+        .order-middle,
+        .order-bottom {
+          display: flex;
+          justify-content: space-between;
+          gap: 1rem;
+        }
+
+        .order-top {
+          align-items: center;
+          margin-bottom: 1.2rem;
+        }
+
+        .order-middle {
+          padding: 1.2rem 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          align-items: flex-start;
+        }
+
+        .order-bottom {
+          margin-top: 1rem;
+          align-items: center;
+        }
+
+        .order-id span,
+        .price-item span {
+          display: block;
+          font-size: 0.75rem;
+          color: var(--text-dim);
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+        }
+
+        .order-id strong {
+          font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+          font-size: 1.1rem;
+        }
+
+        .order-status {
+          padding: 0.45rem 0.8rem;
+          border-radius: 999px;
+          text-transform: uppercase;
+          font-weight: 800;
+          font-size: 0.75rem;
+        }
+
+        .order-status.pending {
+          background: rgba(255, 215, 0, 0.12);
+          color: var(--primary);
+        }
+
+        .order-status.confirmed {
+          background: rgba(74, 222, 128, 0.14);
+          color: #7bf0aa;
+        }
+
+        .order-status.completed {
+          background: rgba(96, 165, 250, 0.14);
+          color: #8dbdfc;
+        }
+
+        .order-status.cancelled {
+          background: rgba(248, 113, 113, 0.14);
+          color: #ffaaa3;
+        }
+
+        .eq-mini-info {
+          display: flex;
+          gap: 1rem;
+        }
+
+        .eq-thumb {
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          display: grid;
+          place-items: center;
+          background: linear-gradient(135deg, var(--primary), #ff9f1a);
+          color: #111;
+        }
+
+        .eq-details h4 {
+          margin-bottom: 0.5rem;
+        }
+
+        .meta-row,
+        .meta-badges,
+        .info-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+        }
+
+        .meta-row span,
+        .meta-badges .badge,
+        .info-list span,
+        .notes {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+        }
+
+        .meta-row span {
+          color: var(--text-dim);
+          font-size: 0.9rem;
+        }
+
+        .order-pricing {
+          display: flex;
+          gap: 2.2rem;
+        }
+
+        .price-item strong {
+          font-size: 1rem;
+        }
+
+        .badge {
+          padding: 0.4rem 0.7rem;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.05);
+          font-size: 0.82rem;
+          color: #fff;
+        }
+
+        .notes {
+          color: #e6dfd0;
+          max-width: 360px;
+          text-align: right;
+          font-size: 0.9rem;
+        }
+
+        .side-area {
+          display: grid;
+          gap: 1rem;
+          align-content: start;
+        }
+
+        .info-card h3 {
+          margin-bottom: 1rem;
+        }
+
+        .info-list {
+          flex-direction: column;
+        }
+
+        .info-list span {
+          color: var(--text-dim);
+        }
+
+        .info-list svg {
+          color: #4ade80;
+        }
+
+        .summary-card {
+          padding: 1.5rem;
+          border-radius: 18px;
+          background: linear-gradient(145deg, rgba(255, 94, 0, 0.15), rgba(247, 201, 72, 0.14));
+          border: 1px solid rgba(247, 201, 72, 0.2);
+        }
+
+        .summary-card h4 {
+          margin-bottom: 0.55rem;
+        }
+
+        .summary-card a {
+          display: inline-block;
+          margin-top: 0.9rem;
+          color: var(--text-dark);
+          background: linear-gradient(120deg, var(--primary), var(--primary-strong));
+          padding: 0.7rem 1rem;
+          border-radius: 999px;
+          font-weight: 700;
+        }
+
+        @media (max-width: 1024px) {
+          .layout-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .header-stat {
+            width: 100%;
+          }
+
+          .order-top,
+          .order-middle,
+          .order-bottom {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.2rem;
+          }
+
+          .order-middle {
+            padding: 1.5rem 0;
+          }
+
+          .eq-mini-info {
+            width: 100%;
+          }
+
+          .order-pricing {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 1.2rem;
+            margin-top: 0.5rem;
+          }
+
+          .notes {
+            max-width: none;
+            text-align: left;
+            margin-top: 0.5rem;
+          }
+
+          .tabs {
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            width: 100%;
+          }
+
+          .tab-btn {
+            white-space: nowrap;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .order-pricing {
+            grid-template-columns: 1fr;
+          }
+          
+          .meta-row {
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+        }
