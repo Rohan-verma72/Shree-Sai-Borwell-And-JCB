@@ -57,11 +57,14 @@ function calculateStats(data: DbData): Stats {
 
 function autoExpireOldBookings(data: DbData) {
   const now = new Date();
+  // Grace period: only auto-expire bookings that ended more than 24 hours ago
+  // This prevents same-day bookings from being auto-completed during admin actions
+  const gracePeriodMs = 24 * 60 * 60 * 1000;
   data.bookings = data.bookings.map((booking) => {
     if (booking.status === 'Pending') {
       const endDate = new Date(booking.endDate);
-      // Auto-complete as soon as end date has passed
-      if (now > endDate) {
+      const msOverdue = now.getTime() - endDate.getTime();
+      if (msOverdue > gracePeriodMs) {
         return { ...booking, status: 'Completed' as Booking['status'] };
       }
     }
@@ -155,7 +158,8 @@ export async function createBooking(input: CreateBookingInput) {
 }
 
 export async function updateBookingStatus(id: string, status: Booking['status']) {
-  const data = await readDb();
+  const raw = await fs.readFile(DB_PATH, 'utf-8');
+  const data = JSON.parse(raw) as DbData;
   const bookingIndex = data.bookings.findIndex((item) => item.id === id);
 
   if (bookingIndex === -1) {
@@ -168,7 +172,10 @@ export async function updateBookingStatus(id: string, status: Booking['status'])
   };
 
   data.bookings[bookingIndex] = updatedBooking;
-  await writeDb(data);
+  // Sync derived data AFTER setting the explicit status so auto-expire
+  // does not override the admin's chosen status during the same write.
+  syncDerivedData(data);
+  await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
 
   return updatedBooking;
 }

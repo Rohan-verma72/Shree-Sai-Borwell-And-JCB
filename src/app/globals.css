@@ -108,3 +108,46 @@ a {
     padding: 0 1.5rem;
   }
 }
+
+/* ── Booking form: fix input visibility on all browsers/mobile ── */
+.booking-form .form-group input,
+.booking-form .form-group select,
+.booking-form .form-group textarea {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid #252e3f !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 16px !important; /* prevents iOS zoom on focus */
+  padding: 0.8rem 1rem !important;
+  border-radius: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  min-height: 48px !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  /* override browser autofill blue background */
+  box-shadow: 0 0 0 1000px rgba(15, 20, 29, 0.95) inset !important;
+  transition: border-color 0.2s !important;
+}
+
+.booking-form .form-group input:focus,
+.booking-form .form-group select:focus,
+.booking-form .form-group textarea:focus {
+  border-color: #f7c948 !important;
+  outline: none !important;
+}
+
+.booking-form .form-group label {
+  font-size: 0.8rem !important;
+  color: #9ca8be !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  display: block !important;
+  margin-bottom: 0.4rem !important;
+}
+
+.booking-form .form-group select option {
+  background: #0f141d;
+  color: #fff;
+}
+

@@ -795,6 +795,7 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
           align-items: flex-end;
           justify-content: center;
           padding: 0;
+          padding-bottom: env(safe-area-inset-bottom, 0px);
         }
         @media (min-width: 600px) {
           .booking-modal-overlay {
@@ -809,10 +810,11 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
           width: 100%;
           max-width: 540px;
           border-radius: 16px 16px 0 0;
-          padding: 1rem 1rem 2rem;
-          max-height: 92vh;
+          padding: 1.25rem 1rem 2.5rem;
+          max-height: 88vh;
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
         }
         @media (min-width: 600px) {
           .booking-modal {
@@ -820,6 +822,20 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
             padding: 1.5rem;
             max-height: 96vh;
           }
+        }
+
+        /* Drag handle hint for mobile bottom sheet */
+        .booking-modal::before {
+          content: '';
+          display: block;
+          width: 40px;
+          height: 4px;
+          border-radius: 99px;
+          background: rgba(255,255,255,0.15);
+          margin: 0 auto 1rem;
+        }
+        @media (min-width: 600px) {
+          .booking-modal::before { display: none; }
         }
 
         .modal-header {
