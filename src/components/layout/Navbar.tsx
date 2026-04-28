@@ -57,6 +57,7 @@ export default function Navbar() {
           <Link href="/equipment" className={pathname === '/equipment' ? 'active' : ''}>{t.allEquipment}</Link>
           <Link href="/bookings" className={pathname === '/bookings' ? 'active' : ''}>{t.bookings}</Link>
           <Link href="/support" className={pathname === '/support' ? 'active' : ''}>{t.support}</Link>
+          <Link href="/admin" className="admin-link">{t.adminPanel}</Link>
           
           <button 
             className="lang-toggle"
@@ -103,6 +104,9 @@ export default function Navbar() {
           </Link>
           <Link href="/support" onClick={() => setMobileMenuOpen(false)}>
             {t.support} <ChevronRight size={18} />
+          </Link>
+          <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
+            {t.adminPanel} <ChevronRight size={18} />
           </Link>
         </div>
 
