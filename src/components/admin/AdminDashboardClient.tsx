@@ -534,6 +534,16 @@ export default function AdminDashboardClient() {
                                 <button type="button" className={styles.actionApprove} disabled={updatingBookingId === b.id || b.status === 'Confirmed'} onClick={() => void updateStatus(b.id, 'Confirmed')}><Check size={13}/> Approve</button>
                                 <button type="button" className={styles.actionComplete} disabled={updatingBookingId === b.id || b.status === 'Completed'} onClick={() => void updateStatus(b.id, 'Completed')}><CheckCheck size={13}/> Done</button>
                                 <button type="button" className={styles.actionCancel} disabled={updatingBookingId === b.id || b.status === 'Cancelled'} onClick={() => void updateStatus(b.id, 'Cancelled')}><X size={13}/> Cancel</button>
+                                {b.status === 'Confirmed' && (
+                                  <a
+                                    href={`https://wa.me/${b.phone?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${b.customer}, Your booking ${b.id} for ${b.equipment} at ${b.location} is CONFIRMED by Shree Sai Borewell & JCB. We are dispatching the machine shortly.`)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={styles.actionWhatsApp}
+                                  >
+                                    <MessageSquare size={13} /> WhatsApp
+                                  </a>
+                                )}
                               </div>
                             </div>
                           )) : <div className={styles.emptyState}>No bookings yet.</div>}
@@ -556,6 +566,16 @@ export default function AdminDashboardClient() {
                               <button type="button" className={styles.actionApprove} disabled={updatingBookingId === b.id || b.status === 'Confirmed'} onClick={() => void updateStatus(b.id, 'Confirmed')}><Check size={13}/> Approve</button>
                               <button type="button" className={styles.actionComplete} disabled={updatingBookingId === b.id || b.status === 'Completed'} onClick={() => void updateStatus(b.id, 'Completed')}><CheckCheck size={13}/> Done</button>
                               <button type="button" className={styles.actionCancel} disabled={updatingBookingId === b.id || b.status === 'Cancelled'} onClick={() => void updateStatus(b.id, 'Cancelled')}><X size={13}/> Cancel</button>
+                              {b.status === 'Confirmed' && (
+                                <a
+                                  href={`https://wa.me/${b.phone?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${b.customer}, Your booking ${b.id} for ${b.equipment} at ${b.location} is CONFIRMED by Shree Sai Borewell & JCB. We are dispatching the machine shortly.`)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={styles.actionWhatsApp}
+                                >
+                                  <MessageSquare size={13} /> WhatsApp
+                                </a>
+                              )}
                             </div>
                           </div>
                         )) : <div className={styles.emptyState}>No bookings found.</div>}
