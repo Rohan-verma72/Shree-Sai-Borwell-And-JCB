@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { 
@@ -34,7 +34,19 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
   const [showBookingForm, setShowBookingForm] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
-  const [confirmedBookingId, setConfirmedBookingId] = React.useState<string>('');
+  const [confirmedBookingId, setConfirmedBookingId] = React.useState<string | null>(null);
+
+  // Lock body scroll when modal is open to prevent background scrolling on mobile
+  useEffect(() => {
+    if (showBookingForm) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showBookingForm]);
   const [bookingData, setBookingData] = React.useState({
     customer: '',
     phone: '',
@@ -792,10 +804,11 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
           backdrop-filter: blur(8px);
           z-index: 1000;
           display: flex;
-          align-items: flex-end;
+          align-items: flex-start;
           justify-content: center;
-          padding: 0;
+          padding: 1rem 0;
           padding-bottom: env(safe-area-inset-bottom, 0px);
+          overflow-y: auto;
         }
         @media (min-width: 600px) {
           .booking-modal-overlay {
@@ -809,12 +822,9 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
           border: 1px solid var(--border-color);
           width: 100%;
           max-width: 540px;
-          border-radius: 16px 16px 0 0;
+          border-radius: 12px;
           padding: 1.25rem 1rem 2.5rem;
-          max-height: 88vh;
-          overflow-y: auto;
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: contain;
+          margin: auto 0;
         }
         @media (min-width: 600px) {
           .booking-modal {
