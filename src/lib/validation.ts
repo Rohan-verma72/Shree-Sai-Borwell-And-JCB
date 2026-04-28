@@ -46,12 +46,15 @@ export function validateCreateBookingPayload(payload: unknown): CreateBookingPay
 
   if (!isNonEmptyString(body.equipmentId, 2, 100)) throw new Error('Equipment is required');
   if (!isNonEmptyString(body.customer, 2, 80)) throw new Error('Customer name is invalid');
-  if (body.phone && !isNonEmptyString(body.phone, 8, 20)) throw new Error('Phone number is invalid');
+  if (body.phone && !isNonEmptyString(body.phone, 7, 20)) throw new Error('Phone number is invalid (minimum 7 digits)');
   if (!isValidDateString(body.startDate)) throw new Error('Start date is invalid');
   if (!isValidDateString(body.endDate)) throw new Error('End date is invalid');
   if (!isPositiveFiniteNumber(body.total)) throw new Error('Total amount is invalid');
-  if (!isNonEmptyString(body.duration, 2, 80)) throw new Error('Duration is invalid');
-  if (body.notes && !isNonEmptyString(body.notes, 2, 500)) throw new Error('Notes are too short');
+  if (!isNonEmptyString(body.duration, 1, 80)) throw new Error('Duration is invalid');
+  // notes are optional - only validate if non-empty
+  if (body.notes && typeof body.notes === 'string' && body.notes.trim().length > 0 && body.notes.trim().length > 500) {
+    throw new Error('Notes are too long (max 500 characters)');
+  }
 
   if (!CUSTOMER_TYPES.includes(body.customerType as Booking['customerType'])) {
     throw new Error('Customer type is invalid');
@@ -78,7 +81,7 @@ export function validateCreateBookingPayload(payload: unknown): CreateBookingPay
     bookingType: body.bookingType as Booking['bookingType'],
     hours: typeof body.hours === 'number' ? body.hours : undefined,
     duration: (body.duration as string).trim(),
-    notes: typeof body.notes === 'string' ? body.notes.trim() : undefined,
+    notes: typeof body.notes === 'string' && body.notes.trim().length > 0 ? body.notes.trim() : undefined,
   };
 }
 

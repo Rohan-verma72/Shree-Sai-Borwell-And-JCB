@@ -1,5 +1,8 @@
 import './globals.css';
 import AppChrome from '@/components/layout/AppChrome';
+import ToasterProvider from '@/components/providers/ToasterProvider';
+import { LanguageProvider } from '@/lib/LanguageContext';
+import WelcomeScreen from '@/components/WelcomeScreen';
 
 export const metadata = {
   title: 'Shree Sai Borewell & JCB | Equipment Rental & Borewell Services',
@@ -14,9 +17,6 @@ export const viewport = {
   maximumScale: 1,
 };
 
-import ToasterProvider from '@/components/providers/ToasterProvider';
-import { LanguageProvider } from '@/lib/LanguageContext';
-
 export default function RootLayout({
   children,
 }: {
@@ -26,6 +26,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ToasterProvider />
+        <WelcomeScreen />
         <LanguageProvider>
           <AppChrome>{children}</AppChrome>
         </LanguageProvider>

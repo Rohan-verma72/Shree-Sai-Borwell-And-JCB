@@ -5,10 +5,13 @@ export async function POST(request: Request) {
   try {
     const { username, password } = await request.json();
 
-    const adminUser = process.env.ADMIN_USERNAME;
-    const adminPass = process.env.ADMIN_PASSWORD;
+    const adminUser = (process.env.ADMIN_USERNAME || 'Rohan').trim();
+    const adminPass = (process.env.ADMIN_PASSWORD || 'Rohan123').trim();
 
-    if (username?.trim() === adminUser?.trim() && password?.trim() === adminPass?.trim()) {
+    console.log('Login attempt for:', username);
+    console.log('Env vars present:', !!process.env.ADMIN_USERNAME, !!process.env.ADMIN_PASSWORD);
+
+    if (username?.trim() === adminUser && password?.trim() === adminPass) {
       // Create a simple session cookie
       // In a real app, use a more secure JWT token
       const cookieStore = await cookies();

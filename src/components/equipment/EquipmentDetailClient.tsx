@@ -34,6 +34,7 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
   const [showBookingForm, setShowBookingForm] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
+  const [confirmedBookingId, setConfirmedBookingId] = React.useState<string>('');
   const [bookingData, setBookingData] = React.useState({
     customer: '',
     phone: '',
@@ -70,6 +71,245 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
 
   const currentTotal = calculateTotal();
 
+  const generateBill = (bookingId: string) => {
+    const duration = bookingData.bookingType === 'Hourly'
+      ? `${bookingData.hours} Hours`
+      : `${Math.max(differenceInDays(new Date(bookingData.endDate), new Date(bookingData.startDate)), 1)} Days`;
+
+    const ratePerUnit = bookingData.bookingType === 'Hourly'
+      ? (bookingData.customerType === 'Farmer' ? (equipment.farmerHourlyRate || equipment.hourlyRate) : equipment.hourlyRate)
+      : bookingData.bookingType === 'Daily'
+        ? (bookingData.customerType === 'Farmer' ? (equipment.farmerDailyRate || equipment.dailyRate) : equipment.dailyRate)
+        : equipment.monthlyRate;
+
+    const rateLabel = bookingData.bookingType === 'Hourly'
+      ? `Rs. ${ratePerUnit.toLocaleString('en-IN')} / hr`
+      : bookingData.bookingType === 'Daily'
+        ? `Rs. ${ratePerUnit.toLocaleString('en-IN')} / day`
+        : `Rs. ${ratePerUnit.toLocaleString('en-IN')} / month`;
+
+    const qty = bookingData.bookingType === 'Hourly'
+      ? `${bookingData.hours} hrs`
+      : `${Math.max(differenceInDays(new Date(bookingData.endDate), new Date(bookingData.startDate)), 1)} days`;
+
+    const waMsg = encodeURIComponent(
+      `*Booking Receipt — ${bookingId}*\n\nCustomer: ${bookingData.customer}\nPhone: ${bookingData.phone}\nEquipment: ${equipment.name}\nDuration: ${duration}\nAmount: Rs. ${currentTotal.toLocaleString('en-IN')}\n\nShree Sai Borewell & JCB\nPhone: ${BUSINESS_DETAILS.phone}`
+    );
+
+    const win = window.open('', '_blank');
+    if (!win) return;
+
+    win.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Booking Receipt — ${bookingId}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',Arial,sans-serif;background:#f4f4f4;padding:40px 16px 60px;color:#1a1a1a;font-size:14px;}
+
+    .page{max-width:680px;margin:0 auto;background:#fff;box-shadow:0 2px 16px rgba(0,0,0,0.08);}
+
+    /* Gold top bar */
+    .top-bar{height:5px;background:linear-gradient(90deg,#c9a800,#f7ca00,#c9a800);}
+
+    /* Header */
+    .header{padding:28px 36px 20px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #e8e8e8;}
+    .co-name{font-size:1.15rem;font-weight:700;color:#b8860b;letter-spacing:0.02em;}
+    .co-sub{font-size:0.72rem;color:#888;margin-top:3px;}
+    .co-contact{font-size:0.78rem;color:#555;margin-top:10px;line-height:1.7;}
+    .receipt-meta{text-align:right;}
+    .receipt-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.14em;color:#aaa;margin-bottom:6px;}
+    .receipt-id{font-family:monospace;font-size:0.95rem;font-weight:700;color:#111;background:#f5f5f5;border:1px solid #e0e0e0;padding:4px 10px;border-radius:4px;display:inline-block;}
+    .receipt-date{font-size:0.78rem;color:#777;margin-top:6px;line-height:1.6;}
+
+    /* Status */
+    .status-bar{background:#fffbeb;border-top:1px solid #fde68a;border-bottom:1px solid #fde68a;padding:8px 36px;font-size:0.75rem;color:#92400e;display:flex;align-items:center;gap:8px;}
+    .status-dot{width:7px;height:7px;border-radius:50%;background:#d97706;flex-shrink:0;}
+
+    /* Body */
+    .body{padding:24px 36px;}
+
+    /* Info section */
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
+    .info-block{padding:14px 16px;background:#fafafa;border:1px solid #efefef;border-radius:4px;}
+    .info-title{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.12em;color:#aaa;font-weight:600;margin-bottom:10px;}
+    .info-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f0f0f0;font-size:0.8rem;}
+    .info-row:last-child{border-bottom:none;}
+    .info-lbl{color:#888;}
+    .info-val{color:#111;font-weight:600;text-align:right;}
+
+    /* Table */
+    .section-label{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.12em;color:#aaa;font-weight:600;margin-bottom:8px;}
+    table{width:100%;border-collapse:collapse;border:1px solid #ebebeb;margin-bottom:20px;font-size:0.82rem;}
+    thead{background:#1a1a1a;}
+    th{padding:10px 14px;text-align:left;font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#f0f0f0;}
+    th.amt{text-align:right;}
+    tbody tr{border-bottom:1px solid #f0f0f0;}
+    td{padding:12px 14px;color:#333;vertical-align:top;}
+    td.amt{text-align:right;font-weight:600;color:#111;}
+    .item-name{font-weight:600;color:#111;}
+    .item-sub{font-size:0.75rem;color:#999;margin-top:2px;}
+
+    /* Total */
+    .total-section{display:flex;justify-content:flex-end;margin-bottom:20px;}
+    .total-box{border:1px solid #e0e0e0;border-top:2px solid #c9a800;padding:14px 20px;min-width:260px;}
+    .total-line{display:flex;justify-content:space-between;font-size:0.8rem;color:#777;padding:3px 0;}
+    .total-final{display:flex;justify-content:space-between;padding-top:8px;margin-top:6px;border-top:1px solid #ddd;}
+    .total-final span{font-size:0.88rem;font-weight:600;color:#333;}
+    .total-final strong{font-size:1.15rem;font-weight:700;color:#111;}
+
+    /* Notes */
+    .notes{background:#fffbeb;border:1px solid #fde68a;padding:12px 14px;margin-bottom:16px;border-radius:3px;}
+    .notes .nt{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:#92400e;font-weight:600;margin-bottom:4px;}
+    .notes p{font-size:0.8rem;color:#78350f;}
+
+    /* Disclaimer */
+    .disclaimer{font-size:0.75rem;color:#999;line-height:1.6;padding:12px 0;border-top:1px solid #efefef;}
+
+    /* Footer */
+    .footer{padding:16px 36px;border-top:1px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center;background:#fafafa;}
+    .footer-left{font-size:0.72rem;color:#888;line-height:1.7;}
+    .footer-left strong{color:#555;}
+    .footer-right{font-size:0.68rem;color:#bbb;text-align:right;}
+
+    /* Print buttons */
+    .btn-row{text-align:center;padding:20px 16px;display:flex;gap:12px;justify-content:center;}
+    .btn-print{background:#1a1a1a;color:#fff;border:none;padding:11px 24px;font-size:0.88rem;font-weight:600;cursor:pointer;border-radius:4px;letter-spacing:0.02em;}
+    .btn-wa{background:#25D366;color:#fff;border:none;padding:11px 24px;font-size:0.88rem;font-weight:600;cursor:pointer;border-radius:4px;text-decoration:none;letter-spacing:0.02em;}
+
+    @media print{
+      body{background:#fff;padding:0;}
+      .page{box-shadow:none;}
+      .btn-row{display:none!important;}
+    }
+    @media(max-width:600px){
+      .header,.body,.footer,.status-bar{padding-left:20px;padding-right:20px;}
+      .info-grid{grid-template-columns:1fr;}
+      .total-section{justify-content:stretch;}
+      .total-box{min-width:0;width:100%;}
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="top-bar"></div>
+
+  <div class="header">
+    <div>
+      <div class="co-name">${BUSINESS_DETAILS.brandName}</div>
+      <div class="co-sub">Equipment Rental &amp; Borewell Services</div>
+      <div class="co-contact">
+        Tel: ${BUSINESS_DETAILS.phone}<br/>
+        ${BUSINESS_DETAILS.address}<br/>
+        GSTIN: ${BUSINESS_DETAILS.gstin}
+      </div>
+    </div>
+    <div class="receipt-meta">
+      <div class="receipt-label">Booking Receipt</div>
+      <div class="receipt-id">${bookingId}</div>
+      <div class="receipt-date">
+        Date: ${format(new Date(), 'dd MMM yyyy')}<br/>
+        Time: ${format(new Date(), 'hh:mm a')}
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-dot"></div>
+    <span>Status: <strong>Pending Confirmation</strong> &mdash; Our team will call you within 2 hours.</span>
+  </div>
+
+  <div class="body">
+
+    <div class="info-grid">
+      <div class="info-block">
+        <div class="info-title">Customer Details</div>
+        <div class="info-row"><span class="info-lbl">Name</span><span class="info-val">${bookingData.customer}</span></div>
+        <div class="info-row"><span class="info-lbl">Phone</span><span class="info-val">${bookingData.phone}</span></div>
+        <div class="info-row"><span class="info-lbl">Category</span><span class="info-val">${bookingData.customerType}</span></div>
+      </div>
+      <div class="info-block">
+        <div class="info-title">Booking Details</div>
+        <div class="info-row"><span class="info-lbl">Start Date</span><span class="info-val">${format(new Date(bookingData.startDate), 'dd MMM yyyy')}</span></div>
+        ${bookingData.bookingType !== 'Hourly' ? `<div class="info-row"><span class="info-lbl">End Date</span><span class="info-val">${format(new Date(bookingData.endDate), 'dd MMM yyyy')}</span></div>` : ''}
+        <div class="info-row"><span class="info-lbl">Billing Type</span><span class="info-val">${bookingData.bookingType}</span></div>
+        <div class="info-row"><span class="info-lbl">Duration</span><span class="info-val">${duration}</span></div>
+      </div>
+    </div>
+
+    <div class="section-label">Service &amp; Charges</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:32px">#</th>
+          <th>Description</th>
+          <th>Rate</th>
+          <th>Qty</th>
+          <th class="amt">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>01</td>
+          <td>
+            <div class="item-name">${equipment.name}</div>
+            <div class="item-sub">${equipment.type} &nbsp;&bull;&nbsp; ${equipment.location}</div>
+          </td>
+          <td>${rateLabel}</td>
+          <td>${qty}</td>
+          <td class="amt">Rs. ${currentTotal.toLocaleString('en-IN')}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="total-section">
+      <div class="total-box">
+        <div class="total-line"><span>Subtotal</span><span>Rs. ${currentTotal.toLocaleString('en-IN')}</span></div>
+        <div class="total-line"><span>GST / Taxes</span><span>As applicable</span></div>
+        <div class="total-final">
+          <span>Total (Estimated)</span>
+          <strong>Rs. ${currentTotal.toLocaleString('en-IN')}</strong>
+        </div>
+      </div>
+    </div>
+
+    ${bookingData.notes ? `
+    <div class="notes">
+      <div class="nt">Site / Notes</div>
+      <p>${bookingData.notes}</p>
+    </div>` : ''}
+
+    <div class="disclaimer">
+      <strong>Note:</strong> This is a booking request receipt, not a final tax invoice. The final amount may vary based on actual site conditions and work hours. Payment is collected after service completion. This receipt is computer-generated and does not require a signature.
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-left">
+      <strong style="color:#b8860b;">${BUSINESS_DETAILS.brandName}</strong><br/>
+      ${BUSINESS_DETAILS.phone} &nbsp;|&nbsp; ${BUSINESS_DETAILS.supportHours}
+    </div>
+    <div class="footer-right">
+      Computer Generated<br/>
+      No Signature Required
+    </div>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="btn-print" onclick="window.print()">Print / Save as PDF</button>
+  <a class="btn-wa" href="https://wa.me/${BUSINESS_DETAILS.phone.replace(/[^0-9]/g,'')}?text=${waMsg}" target="_blank">Share on WhatsApp</a>
+</div>
+
+<script>setTimeout(()=>window.print(),700);</script>
+</body>
+</html>`);
+    win.document.close();
+  };
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!bookingData.customer || !bookingData.phone) {
@@ -92,23 +332,27 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error('Failed to submit booking');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({ error: 'Something went wrong' }));
+        throw new Error(errData?.error || `Server error (${response.status})`);
+      }
 
+      const data = await response.json() as { id?: string; booking?: { id: string } };
+      const bookingId = data?.id ?? data?.booking?.id ?? `BK-${Date.now()}`;
+
+      // Store booking ID, show success popup — NO auto-open
+      setConfirmedBookingId(bookingId);
       setSuccess(true);
-      toast.success('Booking request submitted!');
-      
-      setTimeout(() => {
-        setShowBookingForm(false);
-        setSuccess(false);
-        router.push('/bookings');
-      }, 2000);
+      toast.success('✅ Booking request submitted!');
     } catch (error) {
       console.error(error);
-      toast.error('Something went wrong. Please try again.');
+      const msg = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
   };
+
 
   return (
     <div className="detail-page">
@@ -207,9 +451,45 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
 
               {success ? (
                 <div className="success-state">
-                  <CheckCircle2 size={48} className="success-icon" />
-                  <h3>{t.brandName}</h3>
-                  <p>Request for <strong>{equipment.name}</strong> sent.</p>
+                  {/* Animated checkmark */}
+                  <div className="success-ring">
+                    <CheckCircle2 size={52} className="success-icon" />
+                  </div>
+
+                  <div className="success-text">
+                    <h3>🎉 Booking Successful!</h3>
+                    <p>Request for <strong>{equipment.name}</strong> submitted.</p>
+                    <div className="booking-id-badge">{confirmedBookingId}</div>
+                    <p className="success-note">हम जल्द ही आपसे contact करेंगे।<br/>We will call you to confirm.</p>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="success-actions">
+                    <button
+                      className="btn-view-receipt"
+                      onClick={() => generateBill(confirmedBookingId)}
+                    >
+                      🧾 View Receipt
+                    </button>
+                    <a
+                      className="btn-wa-success"
+                      href={`https://wa.me/${BUSINESS_DETAILS.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`🧾 Booking Confirmed!\n\nBooking ID: ${confirmedBookingId}\nEquipment: ${equipment.name}\nCustomer: ${bookingData.customer}\nPhone: ${bookingData.phone}\nAmount: ₹${currentTotal.toLocaleString('en-IN')}\n\nShree Sai Borewell & JCB\n📞 ${BUSINESS_DETAILS.phone}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      💬 Share on WhatsApp
+                    </a>
+                    <button
+                      className="btn-close-success"
+                      onClick={() => {
+                        setShowBookingForm(false);
+                        setSuccess(false);
+                        router.push('/bookings');
+                      }}
+                    >
+                      ✕ Close
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleBookingSubmit} className="booking-form">
@@ -512,9 +792,15 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
           backdrop-filter: blur(8px);
           z-index: 1000;
           display: flex;
-          align-items: center;
+          align-items: flex-end;
           justify-content: center;
-          padding: 20px;
+          padding: 0;
+        }
+        @media (min-width: 600px) {
+          .booking-modal-overlay {
+            align-items: center;
+            padding: 20px;
+          }
         }
 
         .booking-modal {
@@ -522,10 +808,18 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
           border: 1px solid var(--border-color);
           width: 100%;
           max-width: 540px;
-          border-radius: 16px;
-          padding: 1.25rem;
-          max-height: 96vh;
+          border-radius: 16px 16px 0 0;
+          padding: 1rem 1rem 2rem;
+          max-height: 92vh;
           overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        @media (min-width: 600px) {
+          .booking-modal {
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-height: 96vh;
+          }
         }
 
         .modal-header {
@@ -555,8 +849,14 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
 
         .form-row {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
+          grid-template-columns: 1fr;
+          gap: 0.75rem;
+        }
+        @media (min-width: 480px) {
+          .form-row {
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+          }
         }
 
         .form-group {
@@ -572,13 +872,18 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
         }
 
         .form-group input, .form-group select, .form-group textarea {
-          background: rgba(255, 255, 255, 0.02);
+          background: rgba(255, 255, 255, 0.05);
           border: 1px solid var(--border-color);
-          padding: 0.6rem 0.75rem;
-          border-radius: 6px;
+          padding: 0.75rem 1rem;
+          border-radius: 8px;
           color: #fff;
           font-family: inherit;
-          font-size: 0.95rem;
+          font-size: 1rem;
+          width: 100%;
+          box-sizing: border-box;
+          -webkit-appearance: none;
+          appearance: none;
+          min-height: 48px;
         }
 
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
@@ -623,9 +928,13 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
           padding: 1rem;
           border-radius: 10px;
           font-weight: 700;
+          font-size: 1rem;
           border: none;
           cursor: pointer;
-          margin-top: 1rem;
+          margin-top: 0.5rem;
+          width: 100%;
+          min-height: 52px;
+          letter-spacing: 0.03em;
         }
 
         .btn-submit:disabled {
@@ -637,25 +946,135 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          padding: 3rem 0;
+          padding: 2rem 1rem 1.5rem;
           text-align: center;
-          gap: 1rem;
+          gap: 0;
+        }
+
+        .success-ring {
+          width: 88px;
+          height: 88px;
+          border-radius: 50%;
+          background: rgba(74, 222, 128, 0.12);
+          border: 2px solid rgba(74, 222, 128, 0.35);
+          display: grid;
+          place-items: center;
+          margin-bottom: 1.25rem;
+          animation: ringPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes ringPop {
+          from { transform: scale(0.5); opacity: 0; }
+          to   { transform: scale(1);   opacity: 1; }
         }
 
         .success-icon {
           color: #4ade80;
-          margin-bottom: 1rem;
         }
 
-        .success-state h3 {
-          font-size: 2rem;
+        .success-text h3 {
+          font-size: 1.6rem;
           color: #fff;
+          margin-bottom: 0.4rem;
         }
 
-        .success-state p {
-          color: #777;
-          max-width: 300px;
+        .success-text p {
+          color: #888;
+          font-size: 0.92rem;
+        }
+
+        .booking-id-badge {
+          display: inline-block;
+          margin: 0.75rem auto;
+          background: rgba(247, 202, 0, 0.1);
+          border: 1px solid rgba(247, 202, 0, 0.3);
+          color: #f7ca00;
+          font-family: monospace;
+          font-size: 0.95rem;
+          font-weight: 700;
+          padding: 5px 14px;
+          border-radius: 8px;
+          letter-spacing: 0.06em;
+        }
+
+        .success-note {
+          font-size: 0.82rem !important;
+          color: #666 !important;
+          margin-top: 0.3rem;
+          line-height: 1.6;
+        }
+
+        .success-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          margin-top: 1.5rem;
+          width: 100%;
+        }
+
+        .btn-view-receipt {
+          width: 100%;
+          padding: 1rem;
+          border-radius: 12px;
+          background: linear-gradient(120deg, #f7ca00, #ffb800);
+          color: #000;
+          font-weight: 800;
+          font-size: 1rem;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          min-height: 52px;
+          transition: transform 0.15s, filter 0.15s;
+        }
+
+        .btn-view-receipt:hover {
+          transform: translateY(-1px);
+          filter: brightness(1.06);
+        }
+
+        .btn-wa-success {
+          width: 100%;
+          padding: 1rem;
+          border-radius: 12px;
+          background: #25D366;
+          color: #fff;
+          font-weight: 800;
+          font-size: 1rem;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          min-height: 52px;
+          text-decoration: none;
+          transition: transform 0.15s, filter 0.15s;
+        }
+
+        .btn-wa-success:hover {
+          transform: translateY(-1px);
+          filter: brightness(1.06);
+        }
+
+        .btn-close-success {
+          width: 100%;
+          padding: 0.85rem;
+          border-radius: 12px;
+          background: transparent;
+          border: 1px solid rgba(255,255,255,0.12);
+          color: #888;
+          font-size: 0.92rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.15s, color 0.15s;
+        }
+
+        .btn-close-success:hover {
+          background: rgba(255,255,255,0.05);
+          color: #ccc;
         }
 
         .hint {
@@ -728,12 +1147,35 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
           }
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
+          .detail-page {
+            padding: 90px 0 60px;
+          }
           .booking-card {
             padding: 1.5rem;
           }
           .booking-card h1 {
-            font-size: 1.8rem;
+            font-size: 2rem;
+          }
+          .btn-book-now, .btn-call, .btn-wa {
+            padding: 0.9rem 1rem;
+            font-size: 1rem;
+            min-height: 50px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .booking-card {
+            padding: 1.25rem;
+          }
+          .booking-card h1 {
+            font-size: 1.7rem;
+          }
+          .modal-header h2 {
+            font-size: 1.2rem;
+          }
+          .estimate-box strong {
+            font-size: 1.25rem;
           }
         }
       `}</style>

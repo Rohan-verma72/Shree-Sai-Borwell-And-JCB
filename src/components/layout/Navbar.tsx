@@ -74,6 +74,13 @@ export default function Navbar() {
 
         {/* Mobile Toggle & Call */}
         <div className="mobile-actions">
+          <button
+            className="mobile-lang-btn"
+            onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
+            aria-label="Toggle language"
+          >
+            {language === 'en' ? 'हि' : 'EN'}
+          </button>
           <a href={BUSINESS_LINKS.tel} className="mobile-phone-btn">
             <Phone size={20} fill="var(--primary)" />
           </a>
@@ -101,6 +108,16 @@ export default function Navbar() {
           <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
             {t.adminPanel} <ChevronRight size={18} />
           </Link>
+        </div>
+
+        <div className="mobile-lang-full">
+          <button
+            className="lang-toggle-full"
+            onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
+          >
+            <span>{language === 'en' ? '🇮🇳' : '🇬🇧'}</span>
+            {language === 'en' ? 'हिन्दी में बदलें' : 'Switch to English'}
+          </button>
         </div>
         
         <div className="mobile-footer">
@@ -333,6 +350,22 @@ export default function Navbar() {
           gap: 0.5rem;
         }
 
+        .mobile-lang-btn {
+          background: rgba(255, 215, 0, 0.12);
+          color: var(--primary);
+          border: 1px solid rgba(255, 215, 0, 0.3);
+          border-radius: 8px;
+          padding: 0.3rem 0.6rem;
+          font-weight: 800;
+          font-size: 0.8rem;
+          cursor: pointer;
+          min-width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
         .mobile-phone-btn {
           width: 42px;
           height: 42px;
@@ -343,6 +376,33 @@ export default function Navbar() {
           border: 1px solid rgba(255, 215, 0, 0.2);
           border-radius: 50%;
           color: var(--primary);
+        }
+
+        .mobile-lang-full {
+          padding: 1rem 0;
+          border-top: 1px solid var(--border-color);
+          border-bottom: 1px solid var(--border-color);
+          margin-bottom: 1rem;
+        }
+
+        .lang-toggle-full {
+          width: 100%;
+          background: rgba(255, 215, 0, 0.08);
+          color: var(--primary);
+          border: 1px solid rgba(255, 215, 0, 0.25);
+          border-radius: 10px;
+          padding: 0.85rem 1rem;
+          font-weight: 700;
+          font-size: 1rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          transition: all 0.2s;
+        }
+
+        .lang-toggle-full:hover {
+          background: rgba(255, 215, 0, 0.15);
         }
 
         @media (max-width: 900px) {

@@ -55,7 +55,22 @@ function calculateStats(data: DbData): Stats {
   };
 }
 
+function autoExpireOldBookings(data: DbData) {
+  const now = new Date();
+  data.bookings = data.bookings.map((booking) => {
+    if (booking.status === 'Pending') {
+      const endDate = new Date(booking.endDate);
+      // Auto-complete as soon as end date has passed
+      if (now > endDate) {
+        return { ...booking, status: 'Completed' as Booking['status'] };
+      }
+    }
+    return booking;
+  });
+}
+
 function syncDerivedData(data: DbData) {
+  autoExpireOldBookings(data);
   syncEquipmentAvailability(data);
   data.stats = calculateStats(data);
 }

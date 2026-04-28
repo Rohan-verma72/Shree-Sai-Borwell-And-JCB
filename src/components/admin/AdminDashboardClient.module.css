@@ -432,6 +432,12 @@
   display: grid;
   grid-template-columns: minmax(0, 1.65fr) minmax(320px, 0.95fr);
   gap: 1rem;
+  align-items: start;
+}
+
+/* Full-width panel used when sideStack is hidden */
+.panelFull {
+  grid-column: 1 / -1;
 }
 
 .panel,
@@ -1079,4 +1085,391 @@
   0% { opacity: 0.6; }
   50% { opacity: 1; }
   100% { opacity: 0.6; }
+}
+
+/* ── Control Tab Panels ── */
+.controlTabContent {
+  padding: 0.5rem 0;
+}
+
+.controlInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.controlCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1.25rem;
+}
+
+.controlCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 0.5rem;
+}
+
+.controlCardHeader strong {
+  font-size: 1rem;
+  color: #fff;
+}
+
+.controlCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.controlRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.controlRow span {
+  color: var(--text-dim);
+}
+
+.controlRow strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Dispatch */
+.dispatchSummary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.dispatchStat {
+  background: rgba(255, 215, 0, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 14px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.dispatchStat strong {
+  display: block;
+  font-size: 1.8rem;
+  color: #f7ca00;
+}
+
+.dispatchStat span {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Compliance */
+.complianceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.complianceCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.complianceCard h4 {
+  font-size: 1rem;
+  color: #fff;
+  margin: 0;
+}
+
+.complianceCard p {
+  font-size: 0.84rem;
+  color: var(--text-dim);
+  flex: 1;
+}
+
+/* Settings */
+.settingsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.settingsCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1.5rem;
+}
+
+.settingsCard h4 {
+  font-size: 1rem;
+  color: var(--primary);
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 600px) {
+  .dispatchSummary {
+    grid-template-columns: 1fr;
+  }
+  .controlInfoGrid,
+  .complianceGrid,
+  .settingsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ══════════════════════════════════════
+   MOBILE ACCORDION — phone view only
+══════════════════════════════════════ */
+
+/* Hide accordion on desktop */
+.mobileAccordion {
+  display: none;
+}
+
+/* On mobile: show accordion, hide sidebar + main */
+@media (max-width: 768px) {
+  .mobileAccordion {
+    display: block;
+    min-height: 100vh;
+    padding: 0 0 4rem;
+    background:
+      radial-gradient(circle at top left, rgba(255, 215, 0, 0.12), transparent 30%),
+      linear-gradient(180deg, #11110f 0%, #090909 100%);
+  }
+
+  .sidebar,
+  .main {
+    display: none !important;
+  }
+
+  /* Mobile header bar */
+  .mobileHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: sticky;
+    top: 70px;
+    z-index: 10;
+    background: rgba(10,10,9,0.96);
+    backdrop-filter: blur(14px);
+  }
+
+  .mobileBrand {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #f7ca00;
+    letter-spacing: 0.04em;
+  }
+
+  .mobileMeta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .mobileLogoutBtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+    display: grid;
+    place-items: center;
+  }
+
+  /* Section label */
+  .mobileSection {
+    padding: 0 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .mobileSectionLabel {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #f7ca00;
+    padding: 0.5rem 0.5rem 0.35rem;
+  }
+
+  /* Each tab block */
+  .mobileTabBlock {
+    margin-bottom: 0.4rem;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+
+  .mobileTabBtn {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.95rem 1rem;
+    background: rgba(255,255,255,0.03);
+    color: #d7d2c5;
+    border: none;
+    text-align: left;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: background 0.18s ease;
+  }
+
+  .mobileTabBtnActive {
+    background: rgba(247, 202, 0, 0.1);
+    color: #fff;
+    border-bottom: 1px solid rgba(247,202,0,0.15);
+  }
+
+  .mobileTabBtnLeft {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .mobileChevron {
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.3);
+    transition: transform 0.2s ease;
+    display: inline-block;
+  }
+
+  .mobileChevronOpen {
+    transform: rotate(180deg);
+    color: #f7ca00;
+  }
+
+  /* Expanded tab content */
+  .mobileTabContent {
+    padding: 0.85rem 0.75rem 1rem;
+    background: rgba(0,0,0,0.22);
+    animation: slideDown 0.2s ease-out;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Mini stats row */
+  .mobileMiniStats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .miniStat {
+    padding: 0.75rem 0.8rem;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+
+  .miniStat span {
+    display: block;
+    font-size: 0.68rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 0.3rem;
+  }
+
+  .miniStat strong {
+    display: block;
+    font-size: 1.3rem;
+    color: #f7ca00;
+  }
+
+  /* Booking card list */
+  .mobileBookingList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .mobileBookingCard {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.9rem 1rem;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .mobileBookingTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+    flex-wrap: wrap;
+  }
+
+  .mobileBookingMeta {
+    display: block;
+    font-size: 0.82rem;
+    color: #999;
+  }
+
+  /* Mobile form */
+  .mobileForm {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .mobileForm label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    color: #bbb;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .mobileForm input {
+    padding: 0.75rem 0.9rem;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #fff;
+    font-size: 0.95rem;
+  }
+
+  /* Logout row at bottom */
+  .mobileLogoutRow {
+    margin: 1rem 0.75rem 0;
+    border-radius: 16px;
+    border: 1px solid rgba(248,113,113,0.2);
+    background: rgba(248,113,113,0.06);
+    color: #ffaaa3;
+    width: calc(100% - 1.5rem);
+  }
 }

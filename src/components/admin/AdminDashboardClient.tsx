@@ -18,6 +18,7 @@ import {
   MapPin,
   MessageSquare,
   Package,
+  Phone,
   Search,
   ShieldCheck,
   Tractor,
@@ -476,7 +477,231 @@ export default function AdminDashboardClient() {
 
   return (
     <div className={styles.shell}>
+      {/* ══ MOBILE ACCORDION — shown only on mobile ══ */}
+      <div className={styles.mobileAccordion}>
+        {/* Mobile header */}
+        <div className={styles.mobileHeader}>
+          <Link href="/" style={{ textDecoration: 'none' }}>
+            <span className={styles.mobileBrand}>⚙ Shree Sai Ops</span>
+          </Link>
+          <div className={styles.mobileMeta}>
+            <span className={styles.syncStatus}>● {lastUpdated}</span>
+            <button type="button" className={styles.mobileLogoutBtn} onClick={handleLogout}>
+              <LogOut size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile tab accordion */}
+        {navSections.map((section) => (
+          <div key={section.label} className={styles.mobileSection}>
+            <span className={styles.mobileSectionLabel}>{section.label}</span>
+            {section.items.map((item) => (
+              <div key={item.label} className={styles.mobileTabBlock}>
+                <button
+                  type="button"
+                  className={clsx(styles.mobileTabBtn, activeTab === item.label && styles.mobileTabBtnActive)}
+                  onClick={() => setActiveTab(activeTab === item.label ? '' : item.label)}
+                >
+                  <span className={styles.mobileTabBtnLeft}>
+                    <item.icon size={18} />
+                    <span>{item.label}</span>
+                  </span>
+                  <span className={clsx(styles.mobileChevron, activeTab === item.label && styles.mobileChevronOpen)}>▼</span>
+                </button>
+                {activeTab === item.label && (
+                  <div className={styles.mobileTabContent}>
+                    {/* Dashboard */}
+                    {item.label === 'Dashboard' && (
+                      <>
+                        <div className={styles.mobileMiniStats}>
+                          <div className={styles.miniStat}><span>Total Bookings</span><strong>{bookings.length}</strong></div>
+                          <div className={styles.miniStat}><span>Pending</span><strong>{pendingBookings.length}</strong></div>
+                          <div className={styles.miniStat}><span>Revenue</span><strong>{formatCompactCurrency(stats?.totalRevenue ?? 0)}</strong></div>
+                          <div className={styles.miniStat}><span>Machines</span><strong>{totalMachines}</strong></div>
+                        </div>
+                        <div className={styles.mobileBookingList}>
+                          {visibleBookings.length > 0 ? visibleBookings.map((b) => (
+                            <div key={b.id} className={styles.mobileBookingCard}>
+                              <div className={styles.mobileBookingTop}>
+                                <span className={styles.bookingId}>{b.id}</span>
+                                <span className={clsx(styles.statusPill, styles[`status${statusToneMap[b.status]}`])}>{b.status}</span>
+                              </div>
+                              <strong>{b.customer}</strong>
+                              <span className={styles.mobileBookingMeta}>{b.equipment} • {b.location}</span>
+                              <span className={styles.mobileBookingMeta}>{format(new Date(b.startDate), 'dd MMM')} • {formatCurrency(b.total)}</span>
+                              <div className={styles.actionGroup}>
+                                <button type="button" className={styles.actionApprove} disabled={updatingBookingId === b.id || b.status === 'Confirmed'} onClick={() => void updateStatus(b.id, 'Confirmed')}><Check size={13}/> Approve</button>
+                                <button type="button" className={styles.actionComplete} disabled={updatingBookingId === b.id || b.status === 'Completed'} onClick={() => void updateStatus(b.id, 'Completed')}><CheckCheck size={13}/> Done</button>
+                                <button type="button" className={styles.actionCancel} disabled={updatingBookingId === b.id || b.status === 'Cancelled'} onClick={() => void updateStatus(b.id, 'Cancelled')}><X size={13}/> Cancel</button>
+                              </div>
+                            </div>
+                          )) : <div className={styles.emptyState}>No bookings yet.</div>}
+                        </div>
+                      </>
+                    )}
+                    {/* Bookings */}
+                    {item.label === 'Bookings' && (
+                      <div className={styles.mobileBookingList}>
+                        {visibleBookings.length > 0 ? visibleBookings.map((b) => (
+                          <div key={b.id} className={styles.mobileBookingCard}>
+                            <div className={styles.mobileBookingTop}>
+                              <span className={styles.bookingId}>{b.id}</span>
+                              <span className={clsx(styles.statusPill, styles[`status${statusToneMap[b.status]}`])}>{b.status}</span>
+                            </div>
+                            <strong>{b.customer}</strong>{b.phone && <span className={styles.mobileBookingMeta}>{b.phone}</span>}
+                            <span className={styles.mobileBookingMeta}>{b.equipment} • {b.location}</span>
+                            <span className={styles.mobileBookingMeta}>{format(new Date(b.startDate), 'dd MMM')} • {formatCurrency(b.total)}</span>
+                            <div className={styles.actionGroup}>
+                              <button type="button" className={styles.actionApprove} disabled={updatingBookingId === b.id || b.status === 'Confirmed'} onClick={() => void updateStatus(b.id, 'Confirmed')}><Check size={13}/> Approve</button>
+                              <button type="button" className={styles.actionComplete} disabled={updatingBookingId === b.id || b.status === 'Completed'} onClick={() => void updateStatus(b.id, 'Completed')}><CheckCheck size={13}/> Done</button>
+                              <button type="button" className={styles.actionCancel} disabled={updatingBookingId === b.id || b.status === 'Cancelled'} onClick={() => void updateStatus(b.id, 'Cancelled')}><X size={13}/> Cancel</button>
+                            </div>
+                          </div>
+                        )) : <div className={styles.emptyState}>No bookings found.</div>}
+                      </div>
+                    )}
+                    {/* Fleet Ops */}
+                    {item.label === 'Fleet Ops' && (
+                      <div className={styles.mobileBookingList}>
+                        {equipment.map((eq) => (
+                          <div key={eq.id} className={styles.mobileBookingCard}>
+                            <div className={styles.mobileBookingTop}>
+                              <strong>{eq.name}</strong>
+                              <button
+                                className={clsx(styles.statusPill, eq.availability ? styles.statusconfirmed : styles.statuscancelled)}
+                                onClick={() => void handleToggleAvailability(eq.id, eq.availability)}
+                              >{eq.availability ? 'Available' : 'Busy'}</button>
+                            </div>
+                            <span className={styles.mobileBookingMeta}>{eq.type} • {eq.location} • Stock: {eq.stock}</span>
+                            <span className={styles.mobileBookingMeta}>{formatCurrency(eq.hourlyRate)}/hr • {formatCurrency(eq.dailyRate)}/day</span>
+                            <div className={styles.actionGroup}>
+                              <button className={styles.actionApprove} onClick={() => { setSelectedEquipment(eq); setIsEquipmentModalOpen(true); }}>Edit</button>
+                              <button className={styles.actionCancel} disabled={isDeleting === eq.id} onClick={() => void handleDeleteEquipment(eq.id)}>{isDeleting === eq.id ? '...' : 'Delete'}</button>
+                            </div>
+                          </div>
+                        ))}
+                        <button className={styles.actionPrimary} style={{width:'100%', marginTop:'0.5rem'}} onClick={() => { setSelectedEquipment(null); setIsEquipmentModalOpen(true); }}>
+                          + Add New Machine
+                        </button>
+                      </div>
+                    )}
+                    {/* Customers */}
+                    {item.label === 'Customers' && (
+                      <div className={styles.mobileBookingList}>
+                        {enquiries.length > 0 ? enquiries.map((enq) => (
+                          <div key={enq.id} className={styles.mobileBookingCard}>
+                            <strong>{enq.name}</strong>
+                            <span className={styles.mobileBookingMeta}>{enq.phone} • {enq.industry}</span>
+                            <p style={{marginTop:'0.4rem', color:'#ccc', fontSize:'0.88rem'}}>{enq.message}</p>
+                            <span className={styles.mobileBookingMeta}>{format(new Date(enq.createdAt), 'dd MMM yyyy')}</span>
+                          </div>
+                        )) : <div className={styles.emptyState}>No enquiries yet.</div>}
+                      </div>
+                    )}
+                    {/* Site Gallery */}
+                    {item.label === 'Site Gallery' && (
+                      <form className={styles.mobileForm} onSubmit={async (e) => {
+                        e.preventDefault();
+                        const fd = new FormData(e.currentTarget);
+                        const res = await fetch('/api/gallery', { method: 'POST', body: JSON.stringify({ title: fd.get('title'), location: fd.get('location'), imageUrl: fd.get('imageUrl') }) });
+                        if (res.ok) { toast.success('Photo added!'); (e.target as HTMLFormElement).reset(); await fetchDashboard(); } else { toast.error('Failed'); }
+                      }}>
+                        <label>Site Title<input name="title" required placeholder="e.g. Deep Digging, Sehore" /></label>
+                        <label>Location<input name="location" required placeholder="e.g. Sehore, MP" /></label>
+                        <label>Image URL<input name="imageUrl" required placeholder="Paste image link" /></label>
+                        <button type="submit" className={styles.actionPrimary} style={{width:'100%'}}>Add to Gallery</button>
+                      </form>
+                    )}
+                    {/* Maintenance */}
+                    {item.label === 'Maintenance' && (
+                      <div className={styles.mobileBookingList}>
+                        {equipment.map((eq) => (
+                          <div key={eq.id} className={styles.mobileBookingCard}>
+                            <div className={styles.mobileBookingTop}>
+                              <strong>{eq.name}</strong>
+                              <span className={clsx(styles.statusPill, eq.condition === 'Excellent' ? styles.statusconfirmed : eq.condition === 'Good' ? styles.statuspending : styles.statuscancelled)}>{eq.condition}</span>
+                            </div>
+                            <span className={styles.mobileBookingMeta}>{eq.type} • {eq.location}</span>
+                            <span className={styles.mobileBookingMeta} style={{color: eq.availability ? '#4ade80' : '#f87171'}}>{eq.availability ? '✓ Available' : '✗ On Site / Busy'}</span>
+                            <button className={styles.ghostButton} style={{marginTop:'0.5rem', width:'100%', justifyContent:'center'}} onClick={() => { setSelectedEquipment(eq); setIsEquipmentModalOpen(true); }}><Wrench size={14}/> Update Condition</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Dispatch */}
+                    {item.label === 'Dispatch' && (
+                      <div className={styles.mobileBookingList}>
+                        <div className={styles.mobileMiniStats}>
+                          <div className={styles.miniStat}><span>Dispatched</span><strong>{confirmedBookings.length}</strong></div>
+                          <div className={styles.miniStat}><span>Pending</span><strong>{pendingBookings.length}</strong></div>
+                          <div className={styles.miniStat}><span>Ready</span><strong>{availableCount}</strong></div>
+                        </div>
+                        {confirmedBookings.map((b) => (
+                          <div key={b.id} className={styles.mobileBookingCard}>
+                            <div className={styles.mobileBookingTop}>
+                              <span className={styles.bookingId}>{b.id}</span>
+                              <span className={clsx(styles.statusPill, styles.statusconfirmed)}>Dispatched</span>
+                            </div>
+                            <strong>{b.customer}</strong>
+                            <span className={styles.mobileBookingMeta}>{b.equipment} • {b.location}</span>
+                            {b.phone && <a href={`tel:${b.phone}`} className={styles.actionApprove} style={{textDecoration:'none', marginTop:'0.4rem', display:'inline-flex'}}><Phone size={13}/> {b.phone}</a>}
+                          </div>
+                        ))}
+                        {confirmedBookings.length === 0 && <div className={styles.emptyState}>No active dispatches.</div>}
+                      </div>
+                    )}
+                    {/* Compliance */}
+                    {item.label === 'Compliance' && (
+                      <div className={styles.mobileBookingList}>
+                        {[
+                          { icon: '✅', title: 'Fleet Registration', desc: `All ${totalMachines} machines registered.`, status: 'Compliant', ok: true },
+                          { icon: '⚠️', title: 'Operator Safety', desc: 'Operators must carry valid licenses.', status: 'Review Needed', ok: false },
+                          { icon: '✅', title: 'Booking Records', desc: `${bookings.length} records maintained.`, status: 'Up to Date', ok: true },
+                          { icon: '✅', title: 'Revenue', desc: `Verified: ${formatCurrency(stats?.totalRevenue ?? 0)}`, status: 'Verified', ok: true },
+                        ].map((c) => (
+                          <div key={c.title} className={styles.mobileBookingCard}>
+                            <div className={styles.mobileBookingTop}>
+                              <strong>{c.icon} {c.title}</strong>
+                              <span className={clsx(styles.statusPill, c.ok ? styles.statusconfirmed : styles.statuspending)}>{c.status}</span>
+                            </div>
+                            <span className={styles.mobileBookingMeta}>{c.desc}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Settings */}
+                    {item.label === 'Settings' && (
+                      <div className={styles.mobileBookingList}>
+                        <div className={styles.mobileBookingCard}>
+                          <strong>Business Info</strong>
+                          <span className={styles.mobileBookingMeta}>Name: {BUSINESS_DETAILS.brandName}</span>
+                          <span className={styles.mobileBookingMeta}>Phone: {BUSINESS_DETAILS.phone}</span>
+                          <span className={styles.mobileBookingMeta}>Location: Bhopal, MP</span>
+                        </div>
+                        <div className={styles.mobileBookingCard}>
+                          <strong>System Status</strong>
+                          <span className={styles.mobileBookingMeta} style={{color:'#4ade80'}}>✓ Database: Online</span>
+                          <span className={styles.mobileBookingMeta}>Last sync: {lastUpdated}</span>
+                        </div>
+                        <button className={styles.actionPrimary} style={{width:'100%'}} onClick={() => void fetchDashboard()}>Force Sync</button>
+                        <button className={clsx(styles.actionCancel)} style={{width:'100%', marginTop:'0.5rem'}} onClick={handleLogout}><LogOut size={14}/> Logout</button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+        <button type="button" className={clsx(styles.mobileTabBtn, styles.mobileLogoutRow)} onClick={handleLogout}>
+          <span className={styles.mobileTabBtnLeft}><LogOut size={18}/><span>Log Out</span></span>
+        </button>
+      </div>
+
+      {/* ══ DESKTOP SIDEBAR ══ */}
       <aside className={styles.sidebar}>
+
         <div>
           <Link href="/" style={{ textDecoration: 'none' }}>
             <div className={styles.brandBlock}>
@@ -522,7 +747,7 @@ export default function AdminDashboardClient() {
       </aside>
 
       <main className={styles.main}>
-        <section className={styles.hero}>
+        {activeTab === 'Dashboard' && <section className={styles.hero}>
           <div className={styles.heroCopy}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <span className={styles.heroBadge}>Operations cockpit</span>
@@ -590,9 +815,9 @@ export default function AdminDashboardClient() {
               <LogOut size={18} />
             </button>
           </div>
-        </section>
+        </section>}
 
-        <section className={styles.metricsGrid}>
+        {activeTab === 'Dashboard' && <section className={styles.metricsGrid}>
           {metricCards.map((card, index) => (
             <motion.article
               key={card.label}
@@ -611,61 +836,46 @@ export default function AdminDashboardClient() {
               </div>
             </motion.article>
           ))}
-        </section>
+        </section>}
 
         <section className={styles.contentGrid}>
-          <article className={styles.panel}>
+          <article className={clsx(styles.panel, activeTab !== 'Dashboard' && styles.panelFull)}>
             <div className={styles.panelHeader}>
               <div>
-                <span className={styles.panelEyebrow}>Live queue</span>
-                <h3>Booking control board</h3>
+                <span className={styles.panelEyebrow}>
+                  {activeTab === 'Dashboard' ? 'Live queue' : 
+                   activeTab === 'Fleet Ops' ? 'Machine Management' :
+                   activeTab === 'Bookings' ? 'All Bookings' :
+                   activeTab === 'Customers' ? 'Customer Enquiries' :
+                   activeTab === 'Site Gallery' ? 'Gallery Management' :
+                   activeTab === 'Maintenance' ? 'Maintenance Tracker' :
+                   activeTab === 'Dispatch' ? 'Dispatch Center' :
+                   activeTab === 'Compliance' ? 'Compliance Records' :
+                   activeTab === 'Settings' ? 'Admin Settings' : activeTab}
+                </span>
+                <h3>
+                  {activeTab === 'Dashboard' ? 'Booking control board' :
+                   activeTab === 'Fleet Ops' ? 'Fleet Operations' :
+                   activeTab === 'Bookings' ? 'All Booking Records' :
+                   activeTab === 'Customers' ? 'Customer Enquiries' :
+                   activeTab === 'Site Gallery' ? 'Add Work Photos' :
+                   activeTab === 'Maintenance' ? 'Machine Maintenance' :
+                   activeTab === 'Dispatch' ? 'Dispatch Board' :
+                   activeTab === 'Compliance' ? 'Compliance & Docs' :
+                   activeTab === 'Settings' ? 'Admin Settings' : activeTab}
+                </h3>
               </div>
-              <button type="button" className={styles.ghostButton} onClick={() => void fetchDashboard()}>
-                Refresh board <ArrowRight size={15} />
-              </button>
+              {(activeTab === 'Dashboard' || activeTab === 'Bookings') && (
+                <button type="button" className={styles.ghostButton} onClick={() => void fetchDashboard()}>
+                  Refresh board <ArrowRight size={15} />
+                </button>
+              )}
             </div>
 
             <div className={styles.tableWrap}>
-              {activeTab === 'Site Gallery' ? (
-                <div className={styles.galleryManage}>
-                  <div className={styles.panelHeaderCompact}>
-                    <h3>Add New Work Photo</h3>
-                  </div>
-                  <form className={styles.galleryForm} onSubmit={async (e) => {
-                    e.preventDefault();
-                    const fd = new FormData(e.currentTarget);
-                    const res = await fetch('/api/gallery', {
-                      method: 'POST',
-                      body: JSON.stringify({
-                        title: fd.get('title'),
-                        location: fd.get('location'),
-                        imageUrl: fd.get('imageUrl')
-                      })
-                    });
-                    if(res.ok) {
-                      toast.success('Photo added to gallery');
-                      (e.target as any).reset();
-                      await fetchDashboard();
-                    }
-                  }}>
-                    <div className={styles.formGrid}>
-                      <div className={styles.formField}>
-                        <label>Site Title</label>
-                        <input name="title" required placeholder="e.g. Deep Foundation Digging" />
-                      </div>
-                      <div className={styles.formField}>
-                        <label>Location</label>
-                        <input name="location" required placeholder="e.g. Sehore, MP" />
-                      </div>
-                      <div className={styles.formField}>
-                        <label>Image URL</label>
-                        <input name="imageUrl" required placeholder="Paste image link here" />
-                      </div>
-                      <button type="submit" className={styles.actionPrimary}>Add to Gallery</button>
-                    </div>
-                  </form>
-                </div>
-              ) : activeTab === 'Dashboard' || activeTab === 'Bookings' ? (
+
+              {/* ── DASHBOARD / BOOKINGS TAB ── */}
+              {(activeTab === 'Dashboard' || activeTab === 'Bookings') && (
                 <table className={styles.table}>
                   <thead>
                     <tr>
@@ -681,9 +891,7 @@ export default function AdminDashboardClient() {
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={7} className={styles.emptyState}>
-                          Syncing dashboard data...
-                        </td>
+                        <td colSpan={7} className={styles.emptyState}>Syncing dashboard data...</td>
                       </tr>
                     ) : visibleBookings.length > 0 ? (
                       visibleBookings.map((booking) => (
@@ -695,8 +903,7 @@ export default function AdminDashboardClient() {
                           <td>
                             <strong>{booking.customer}</strong>
                             <span className={styles.tableHint}>
-                              {booking.customerType}
-                              {booking.phone ? ` • ${booking.phone}` : ''}
+                              {booking.customerType}{booking.phone ? ` • ${booking.phone}` : ''}
                             </span>
                           </td>
                           <td>
@@ -708,12 +915,7 @@ export default function AdminDashboardClient() {
                             <span className={styles.tableHint}>{booking.duration}</span>
                           </td>
                           <td>
-                            <span
-                              className={clsx(
-                                styles.statusPill,
-                                styles[`status${statusToneMap[booking.status]}`],
-                              )}
-                            >
+                            <span className={clsx(styles.statusPill, styles[`status${statusToneMap[booking.status]}`])}>
                               {booking.status}
                             </span>
                           </td>
@@ -746,9 +948,7 @@ export default function AdminDashboardClient() {
                               </button>
                               {booking.status === 'Confirmed' && (
                                 <a
-                                  href={`https://wa.me/${booking.phone?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                                    `Hello ${booking.customer}, Your booking ${booking.id} for ${booking.equipment} at ${booking.location} is CONFIRMED by Shree Sai Borewell & JCB. We are dispatching the machine shortly.`
-                                  )}`}
+                                  href={`https://wa.me/${booking.phone?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${booking.customer}, Your booking ${booking.id} for ${booking.equipment} at ${booking.location} is CONFIRMED by Shree Sai Borewell & JCB. We are dispatching the machine shortly.`)}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className={styles.actionWhatsApp}
@@ -763,55 +963,7 @@ export default function AdminDashboardClient() {
                                   onClick={() => {
                                     const win = window.open('', '_blank');
                                     if (win) {
-                                      win.document.write(`
-                                        <html>
-                                          <head>
-                                            <title>Receipt - ${booking.id}</title>
-                                            <style>
-                                              body { font-family: sans-serif; padding: 40px; color: #333; }
-                                              .header { border-bottom: 2px solid #f7ca00; padding-bottom: 20px; margin-bottom: 30px; }
-                                              .bill-to { margin-bottom: 30px; }
-                                              .table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                                              .table th, .table td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-                                              .total { font-size: 1.5rem; font-weight: bold; text-align: right; }
-                                              .footer { margin-top: 50px; font-size: 0.8rem; color: #777; text-align: center; }
-                                            </style>
-                                          </head>
-                                          <body>
-                                            <div class="header">
-                                              <h1>SHREE SAI BOREWELL & JCB</h1>
-                                              <p>Bhopal Road, MP | +91 99999 88888</p>
-                                            </div>
-                                            <div class="bill-to">
-                                              <h3>INVOICE / RECEIPT</h3>
-                                              <p><strong>Receipt ID:</strong> ${booking.id}</p>
-                                              <p><strong>Date:</strong> ${format(new Date(), 'dd MMMM yyyy')}</p>
-                                              <p><strong>Customer:</strong> ${booking.customer}</p>
-                                            </div>
-                                            <table class="table">
-                                              <thead>
-                                                <tr>
-                                                  <th>Description</th>
-                                                  <th>Duration</th>
-                                                  <th>Amount</th>
-                                                </tr>
-                                              </thead>
-                                              <tbody>
-                                                <tr>
-                                                  <td>Equipment Rental: ${booking.equipment}</td>
-                                                  <td>${booking.duration}</td>
-                                                  <td>Rs ${booking.total}</td>
-                                                </tr>
-                                              </tbody>
-                                            </table>
-                                            <div class="total">Total Paid: Rs ${booking.total}</div>
-                                            <div class="footer">
-                                              This is a computer generated receipt. Thank you for choosing Shree Sai Borewell & JCB!
-                                            </div>
-                                            <script>window.print();</script>
-                                          </body>
-                                        </html>
-                                      `);
+                                      win.document.write(`<html><head><title>Receipt - ${booking.id}</title><style>body{font-family:sans-serif;padding:40px;color:#333}.header{border-bottom:2px solid #f7ca00;padding-bottom:20px;margin-bottom:30px}.table{width:100%;border-collapse:collapse;margin-bottom:30px}.table th,.table td{padding:12px;border-bottom:1px solid #eee;text-align:left}.total{font-size:1.5rem;font-weight:bold;text-align:right}.footer{margin-top:50px;font-size:.8rem;color:#777;text-align:center}</style></head><body><div class="header"><h1>SHREE SAI BOREWELL & JCB</h1><p>Bhopal Road, MP | ${BUSINESS_DETAILS.phone}</p></div><h3>RECEIPT / INVOICE</h3><p><strong>Receipt ID:</strong> ${booking.id}</p><p><strong>Date:</strong> ${format(new Date(), 'dd MMMM yyyy')}</p><p><strong>Customer:</strong> ${booking.customer}</p>${booking.phone ? `<p><strong>Phone:</strong> ${booking.phone}</p>` : ''}<table class="table"><thead><tr><th>Description</th><th>Duration</th><th>Amount</th></tr></thead><tbody><tr><td>Equipment Rental: ${booking.equipment}</td><td>${booking.duration}</td><td>Rs ${booking.total}</td></tr></tbody></table><div class="total">Total Paid: Rs ${booking.total.toLocaleString('en-IN')}</div><div class="footer">Thank you for choosing Shree Sai Borewell & JCB!</div><script>window.print();</script></body></html>`);
                                       win.document.close();
                                     }
                                   }}
@@ -825,36 +977,21 @@ export default function AdminDashboardClient() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={7} className={styles.emptyState}>
-                          No bookings match this search.
-                        </td>
+                        <td colSpan={7} className={styles.emptyState}>No bookings match this search.</td>
                       </tr>
                     )}
                   </tbody>
                 </table>
-              ) : activeTab === 'Customers' ? (
-                <div className={styles.enquiriesList}>
-                    {enquiries.length > 0 ? enquiries.map((enq) => (
-                        <div key={enq.id} className={styles.enqRow}>
-                            <div className={styles.enqMain}>
-                                <strong>{enq.name}</strong>
-                                <span>{enq.phone} • {enq.industry}</span>
-                                <p>{enq.message}</p>
-                            </div>
-                            <span className={styles.enqDate}>{format(new Date(enq.createdAt), 'dd MMM')}</span>
-                        </div>
-                    )) : <div className={styles.emptyState}>No recent enquiries.</div>}
-                </div>
-              ) : activeTab === 'Fleet Ops' ? (
+              )}
+
+              {/* ── FLEET OPS TAB ── */}
+              {activeTab === 'Fleet Ops' && (
                 <div className={styles.fleetTableContainer}>
                   <div className={styles.tableHeaderActions}>
                     <p>Manage machines, availability and pricing.</p>
                     <button
                       className={styles.ghostButton}
-                      onClick={() => {
-                        setSelectedEquipment(null);
-                        setIsEquipmentModalOpen(true);
-                      }}
+                      onClick={() => { setSelectedEquipment(null); setIsEquipmentModalOpen(true); }}
                     >
                       <Package size={15} /> Add New Machine
                     </button>
@@ -874,9 +1011,7 @@ export default function AdminDashboardClient() {
                     <tbody>
                       {equipment.map((item) => (
                         <tr key={item.id}>
-                          <td>
-                            <strong>{item.name}</strong>
-                          </td>
+                          <td><strong>{item.name}</strong></td>
                           <td>{item.type}</td>
                           <td>{item.location}</td>
                           <td>{item.stock}</td>
@@ -884,31 +1019,15 @@ export default function AdminDashboardClient() {
                           <td>
                             <button
                               onClick={() => void handleToggleAvailability(item.id, item.availability)}
-                              className={clsx(
-                                styles.statusPill,
-                                item.availability ? styles.statusconfirmed : styles.statuscancelled,
-                                styles.toggleBtn,
-                              )}
+                              className={clsx(styles.statusPill, item.availability ? styles.statusconfirmed : styles.statuscancelled, styles.toggleBtn)}
                             >
                               {item.availability ? 'Available' : 'Busy/Maintenance'}
                             </button>
                           </td>
                           <td>
                             <div className={styles.actionGroup}>
-                              <button
-                                className={styles.actionApprove}
-                                onClick={() => {
-                                  setSelectedEquipment(item);
-                                  setIsEquipmentModalOpen(true);
-                                }}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                className={styles.actionCancel}
-                                disabled={isDeleting === item.id}
-                                onClick={() => void handleDeleteEquipment(item.id)}
-                              >
+                              <button className={styles.actionApprove} onClick={() => { setSelectedEquipment(item); setIsEquipmentModalOpen(true); }}>Edit</button>
+                              <button className={styles.actionCancel} disabled={isDeleting === item.id} onClick={() => void handleDeleteEquipment(item.id)}>
                                 {isDeleting === item.id ? '...' : 'Delete'}
                               </button>
                             </div>
@@ -918,12 +1037,195 @@ export default function AdminDashboardClient() {
                     </tbody>
                   </table>
                 </div>
-              ) : (
-                <div className={styles.emptyState}>View coming soon for {activeTab}</div>
               )}
+
+              {/* ── CUSTOMERS TAB ── */}
+              {activeTab === 'Customers' && (
+                <div className={styles.enquiriesList}>
+                  {enquiries.length > 0 ? enquiries.map((enq) => (
+                    <div key={enq.id} className={styles.enqRow}>
+                      <div className={styles.enqMain}>
+                        <strong>{enq.name}</strong>
+                        <span>{enq.phone} • {enq.industry}</span>
+                        <p>{enq.message}</p>
+                      </div>
+                      <span className={styles.enqDate}>{format(new Date(enq.createdAt), 'dd MMM')}</span>
+                    </div>
+                  )) : <div className={styles.emptyState}>No customer enquiries yet.</div>}
+                </div>
+              )}
+
+              {/* ── SITE GALLERY TAB ── */}
+              {activeTab === 'Site Gallery' && (
+                <div className={styles.galleryManage}>
+                  <form className={styles.galleryForm} onSubmit={async (e) => {
+                    e.preventDefault();
+                    const fd = new FormData(e.currentTarget);
+                    const res = await fetch('/api/gallery', {
+                      method: 'POST',
+                      body: JSON.stringify({ title: fd.get('title'), location: fd.get('location'), imageUrl: fd.get('imageUrl') })
+                    });
+                    if (res.ok) { toast.success('Photo added to gallery'); (e.target as HTMLFormElement).reset(); await fetchDashboard(); }
+                    else { toast.error('Failed to add photo'); }
+                  }}>
+                    <div className={styles.formGrid}>
+                      <div className={styles.formField}><label>Site Title</label><input name="title" required placeholder="e.g. Deep Foundation Digging" /></div>
+                      <div className={styles.formField}><label>Location</label><input name="location" required placeholder="e.g. Sehore, MP" /></div>
+                      <div className={styles.formField}><label>Image URL</label><input name="imageUrl" required placeholder="Paste image link here" /></div>
+                      <button type="submit" className={styles.actionPrimary}>Add to Gallery</button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* ── MAINTENANCE TAB ── */}
+              {activeTab === 'Maintenance' && (
+                <div className={styles.controlTabContent}>
+                  <div className={styles.controlInfoGrid}>
+                    {equipment.map((item) => (
+                      <div key={item.id} className={styles.controlCard}>
+                        <div className={styles.controlCardHeader}>
+                          <strong>{item.name}</strong>
+                          <span className={clsx(styles.statusPill, item.condition === 'Excellent' ? styles.statusconfirmed : item.condition === 'Good' ? styles.statuspending : styles.statuscancelled)}>
+                            {item.condition}
+                          </span>
+                        </div>
+                        <div className={styles.controlCardBody}>
+                          <div className={styles.controlRow}><span>Type</span><strong>{item.type}</strong></div>
+                          <div className={styles.controlRow}><span>Location</span><strong>{item.location}</strong></div>
+                          <div className={styles.controlRow}><span>Stock Units</span><strong>{item.stock}</strong></div>
+                          <div className={styles.controlRow}><span>Status</span>
+                            <strong style={{color: item.availability ? '#4ade80' : '#f87171'}}>
+                              {item.availability ? '✓ Available' : '✗ Busy / On Site'}
+                            </strong>
+                          </div>
+                          <div className={styles.controlRow}><span>Hourly Rate</span><strong>{formatCurrency(item.hourlyRate)}</strong></div>
+                          <div className={styles.controlRow}><span>Daily Rate</span><strong>{formatCurrency(item.dailyRate)}</strong></div>
+                        </div>
+                        <button
+                          className={clsx(styles.ghostButton, {[styles.actionCancel]: item.condition === 'Maintenance Required'})}
+                          onClick={() => { setSelectedEquipment(item); setIsEquipmentModalOpen(true); }}
+                          style={{marginTop: '0.75rem', width: '100%'}}
+                        >
+                          <Wrench size={14} /> Update Condition
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── DISPATCH TAB ── */}
+              {activeTab === 'Dispatch' && (
+                <div className={styles.controlTabContent}>
+                  <div className={styles.dispatchSummary}>
+                    <div className={styles.dispatchStat}>
+                      <strong>{confirmedBookings.length}</strong>
+                      <span>Active Dispatches</span>
+                    </div>
+                    <div className={styles.dispatchStat}>
+                      <strong>{pendingBookings.length}</strong>
+                      <span>Awaiting Dispatch Approval</span>
+                    </div>
+                    <div className={styles.dispatchStat}>
+                      <strong>{availableCount}</strong>
+                      <span>Machines Ready</span>
+                    </div>
+                  </div>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr><th>Booking</th><th>Customer</th><th>Equipment</th><th>Site Location</th><th>Status</th><th>Phone</th></tr>
+                    </thead>
+                    <tbody>
+                      {confirmedBookings.length > 0 ? confirmedBookings.map((b) => (
+                        <tr key={b.id}>
+                          <td><span className={styles.bookingId}>{b.id}</span></td>
+                          <td><strong>{b.customer}</strong></td>
+                          <td>{b.equipment}</td>
+                          <td><MapPin size={13} style={{display:'inline', marginRight:4}} />{b.location}</td>
+                          <td><span className={clsx(styles.statusPill, styles.statusconfirmed)}>Dispatched</span></td>
+                          <td>
+                            {b.phone ? (
+                              <a href={`tel:${b.phone}`} className={styles.actionApprove} style={{textDecoration:'none'}}>
+                                <Phone size={13} /> {b.phone}
+                              </a>
+                            ) : '—'}
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr><td colSpan={6} className={styles.emptyState}>No active dispatches right now.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* ── COMPLIANCE TAB ── */}
+              {activeTab === 'Compliance' && (
+                <div className={styles.controlTabContent}>
+                  <div className={styles.complianceGrid}>
+                    <div className={styles.complianceCard}>
+                      <ShieldCheck size={28} color="#4ade80" />
+                      <h4>Fleet Registration</h4>
+                      <p>All {totalMachines} machines are registered and documented in the system.</p>
+                      <span className={clsx(styles.statusPill, styles.statusconfirmed)}>Compliant</span>
+                    </div>
+                    <div className={styles.complianceCard}>
+                      <ShieldCheck size={28} color="#facc15" />
+                      <h4>Operator Safety</h4>
+                      <p>All operators must carry valid licenses during site operations.</p>
+                      <span className={clsx(styles.statusPill, styles.statuspending)}>Review Needed</span>
+                    </div>
+                    <div className={styles.complianceCard}>
+                      <ShieldCheck size={28} color="#4ade80" />
+                      <h4>Booking Records</h4>
+                      <p>{bookings.length} total booking records maintained with full audit trail.</p>
+                      <span className={clsx(styles.statusPill, styles.statusconfirmed)}>Up to Date</span>
+                    </div>
+                    <div className={styles.complianceCard}>
+                      <ShieldCheck size={28} color="#4ade80" />
+                      <h4>Revenue Accounting</h4>
+                      <p>Total verified revenue: {formatCurrency(stats?.totalRevenue ?? 0)}</p>
+                      <span className={clsx(styles.statusPill, styles.statusconfirmed)}>Verified</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── SETTINGS TAB ── */}
+              {activeTab === 'Settings' && (
+                <div className={styles.controlTabContent}>
+                  <div className={styles.settingsGrid}>
+                    <div className={styles.settingsCard}>
+                      <h4>Business Info</h4>
+                      <div className={styles.controlRow}><span>Business Name</span><strong>{BUSINESS_DETAILS.brandName}</strong></div>
+                      <div className={styles.controlRow}><span>Phone</span><strong>{BUSINESS_DETAILS.phone}</strong></div>
+                      <div className={styles.controlRow}><span>Location</span><strong>Bhopal, Madhya Pradesh</strong></div>
+                    </div>
+                    <div className={styles.settingsCard}>
+                      <h4>System Status</h4>
+                      <div className={styles.controlRow}><span>Database</span><strong style={{color:'#4ade80'}}>✓ Online (Local JSON)</strong></div>
+                      <div className={styles.controlRow}><span>Java Backend</span><strong style={{color:'#f87171'}}>✗ Offline (Using fallback)</strong></div>
+                      <div className={styles.controlRow}><span>Auto Refresh</span><strong style={{color:'#4ade80'}}>✓ Every 20 seconds</strong></div>
+                      <div className={styles.controlRow}><span>Last Synced</span><strong>{lastUpdated}</strong></div>
+                    </div>
+                    <div className={styles.settingsCard}>
+                      <h4>Admin Actions</h4>
+                      <button className={styles.actionPrimary} style={{width:'100%', marginBottom:'0.75rem'}} onClick={() => void fetchDashboard()}>
+                        Force Sync Data
+                      </button>
+                      <button className={clsx(styles.actionCancel)} style={{width:'100%'}} onClick={handleLogout}>
+                        <LogOut size={14} /> Logout
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
           </article>
 
+          {activeTab === 'Dashboard' && (
           <div className={styles.sideStack}>
             <article className={styles.quickStrip}>
               <div className={styles.quickStat}>
@@ -943,7 +1245,6 @@ export default function AdminDashboardClient() {
                   <h3>Top equipment</h3>
                 </div>
               </div>
-
               <div className={styles.fleetList}>
                 {topEquipment.map((item) => (
                   <div key={item.id} className={styles.fleetItem}>
@@ -965,18 +1266,10 @@ export default function AdminDashboardClient() {
             <article className={styles.highlightCard}>
               <span className={styles.panelEyebrow}>Attention needed</span>
               <h3>Pending approvals and fleet capacity are now connected.</h3>
-              <p>
-                Confirming a booking updates live stats and machine availability. Cancelling or completing releases the queue cleanly.
-              </p>
+              <p>Confirming a booking updates live stats and machine availability. Cancelling or completing releases the queue cleanly.</p>
               <div className={styles.highlightStats}>
-                <div>
-                  <strong>{pendingBookings.length}</strong>
-                  <span>Pending approvals</span>
-                </div>
-                <div>
-                  <strong>{availableCount}</strong>
-                  <span>Available machines</span>
-                </div>
+                <div><strong>{pendingBookings.length}</strong><span>Pending approvals</span></div>
+                <div><strong>{availableCount}</strong><span>Available machines</span></div>
               </div>
               <p style={{ marginTop: '1rem' }}>
                 Need manual coordination? Call the dispatch desk at{' '}
@@ -984,8 +1277,12 @@ export default function AdminDashboardClient() {
               </p>
             </article>
           </div>
+          )}
         </section>
+
+
       </main>
+
 
       {isNotificationOpen && (
         <>
