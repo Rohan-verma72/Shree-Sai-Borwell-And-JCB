@@ -3,9 +3,9 @@ import 'server-only';
 import { randomUUID } from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
-import type { Booking, Equipment, Stats } from '@/data/types';
+import type { Booking, Equipment, GalleryItem, Inquiry, Stats } from '@/data/types';
 
-export type { Booking, Equipment, Stats } from '@/data/types';
+export type { Booking, Equipment, GalleryItem, Inquiry, Stats } from '@/data/types';
 
 // ── Check if MongoDB is configured ───────────────────────────────────────────
 const useMongo = Boolean(process.env.MONGODB_URI);
@@ -323,22 +323,22 @@ export async function getEnquiries() {
   }
 
   const data = await readLocal();
-  return (data.enquiries ?? []) as unknown[];
+  return (data.enquiries ?? []) as Inquiry[];
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
 // GALLERY
 // ══════════════════════════════════════════════════════════════════════════════
 
-export async function getGallery() {
+export async function getGallery(): Promise<GalleryItem[]> {
   if (useMongo) {
     const db = await getMongoDb();
     const docs = await db.collection(COL.gallery).find().sort({ createdAt: -1 }).toArray();
-    return docs.map(({ _id: _i, ...rest }) => rest);
+    return docs.map(({ _id: _i, ...rest }) => rest) as GalleryItem[];
   }
 
   const data = await readLocal();
-  return (data.gallery ?? []) as unknown[];
+  return (data.gallery ?? []) as GalleryItem[];
 }
 
 export async function addGalleryItem(input: { imageUrl: string; title: string; location: string }) {
@@ -370,14 +370,16 @@ export async function seedFromJson(data: {
   if (!useMongo) return { ok: false, reason: 'MongoDB not configured' };
   const db = await getMongoDb();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type AnyDoc = any;
   if ((await db.collection(COL.equipment).countDocuments()) === 0 && data.equipment.length > 0) {
-    await db.collection(COL.equipment).insertMany(data.equipment as unknown[]);
+    await db.collection(COL.equipment).insertMany(data.equipment as AnyDoc[]);
   }
   if ((await db.collection(COL.bookings).countDocuments()) === 0 && data.bookings.length > 0) {
-    await db.collection(COL.bookings).insertMany(data.bookings as unknown[]);
+    await db.collection(COL.bookings).insertMany(data.bookings as AnyDoc[]);
   }
   if (data.enquiries?.length && (await db.collection(COL.enquiries).countDocuments()) === 0) {
-    await db.collection(COL.enquiries).insertMany(data.enquiries as unknown[]);
+    await db.collection(COL.enquiries).insertMany(data.enquiries as AnyDoc[]);
   }
 
   return { ok: true };

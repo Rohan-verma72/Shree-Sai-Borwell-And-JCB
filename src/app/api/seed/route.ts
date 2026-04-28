@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const result = await seedFromJson(dbJson as Parameters<typeof seedFromJson>[0]);
+    const result = await seedFromJson(dbJson as unknown as Parameters<typeof seedFromJson>[0]);
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Seed failed';
