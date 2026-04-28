@@ -1,113 +1,118 @@
 import 'server-only';
 
-import fs from 'fs/promises';
-import path from 'path';
 import { randomUUID } from 'crypto';
-import type { Booking, DbData, Equipment, Stats } from '@/data/types';
+import type { Booking, Equipment, Stats } from '@/data/types';
+import { getDb } from '@/lib/mongodb';
 
-export type { Booking, DbData, Equipment, Stats } from '@/data/types';
+export type { Booking, Equipment, Stats } from '@/data/types';
 
-const DB_PATH = path.join(process.cwd(), 'src/data/db.json');
+// ── Collection names ──────────────────────────────────────────────────────────
+const COL = {
+  equipment: 'equipment',
+  bookings: 'bookings',
+  enquiries: 'enquiries',
+  gallery: 'gallery',
+} as const;
 
-const RESERVED_BOOKING_STATUSES: Booking['status'][] = ['Confirmed', 'Pending'];
-const REVENUE_BOOKING_STATUSES: Booking['status'][] = ['Confirmed', 'Completed'];
-
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function createEntityId(prefix: 'BK' | 'ENQ') {
   return `${prefix}-${randomUUID().slice(0, 8).toUpperCase()}`;
 }
 
-function countReservedUnits(bookings: Booking[], equipmentId: string, equipmentName: string) {
-  return bookings.filter(
-    (booking) =>
-      (booking.equipmentId === equipmentId || booking.equipment === equipmentName) &&
-      RESERVED_BOOKING_STATUSES.includes(booking.status),
-  ).length;
-}
+const RESERVED_BOOKING_STATUSES: Booking['status'][] = ['Confirmed', 'Pending'];
+const REVENUE_BOOKING_STATUSES: Booking['status'][] = ['Confirmed', 'Completed'];
 
-function syncEquipmentAvailability(data: DbData) {
-  data.equipment = data.equipment.map((item) => {
-    const reservedUnits = countReservedUnits(data.bookings, item.id, item.name);
-    const availableUnits = Math.max(item.stock - reservedUnits, 0);
+// ── Equipment ─────────────────────────────────────────────────────────────────
+export async function getEquipment(): Promise<Equipment[]> {
+  const db = await getDb();
+  const bookings = await db
+    .collection<Booking>(COL.bookings)
+    .find()
+    .toArray();
 
-    return {
-      ...item,
-      availability: availableUnits > 0,
-    };
+  const equipment = await db
+    .collection<Equipment>(COL.equipment)
+    .find()
+    .toArray();
+
+  // Sync availability based on active bookings
+  return equipment.map((item) => {
+    const reserved = bookings.filter(
+      (b) =>
+        (b.equipmentId === item.id || b.equipment === item.name) &&
+        RESERVED_BOOKING_STATUSES.includes(b.status),
+    ).length;
+    const available = Math.max((item.stock ?? 1) - reserved, 0);
+    return { ...item, availability: available > 0, _id: undefined } as Equipment;
   });
 }
 
-function calculateStats(data: DbData): Stats {
-  const reservedUnits = data.equipment.reduce((sum, item) => {
-    return sum + countReservedUnits(data.bookings, item.id, item.name);
-  }, 0);
-  const totalMachines = data.equipment.reduce((sum, item) => sum + item.stock, 0);
-  const activeBookings = data.bookings.filter((booking) =>
-    RESERVED_BOOKING_STATUSES.includes(booking.status),
-  ).length;
-  const totalRevenue = data.bookings
-    .filter((booking) => REVENUE_BOOKING_STATUSES.includes(booking.status))
-    .reduce((sum, booking) => sum + booking.total, 0);
-
-  return {
-    totalRevenue,
-    activeBookings,
-    utilization: totalMachines > 0 ? Math.round((reservedUnits / totalMachines) * 100) : 0,
-  };
+export async function getEquipmentById(id: string): Promise<Equipment | null> {
+  const all = await getEquipment();
+  return all.find((e) => e.id === id) ?? null;
 }
 
-function autoExpireOldBookings(data: DbData) {
-  const now = new Date();
-  // Grace period: only auto-expire bookings that ended more than 24 hours ago
-  // This prevents same-day bookings from being auto-completed during admin actions
+export async function updateEquipment(id: string, updates: Partial<Equipment>): Promise<Equipment> {
+  if (!id) throw new Error('ID is required');
+  const db = await getDb();
+  const result = await db
+    .collection<Equipment>(COL.equipment)
+    .findOneAndUpdate(
+      { id },
+      { $set: updates },
+      { returnDocument: 'after' },
+    );
+  if (!result) throw new Error('Equipment not found');
+  const { _id: _ignored, ...rest } = result as Equipment & { _id?: unknown };
+  return rest as Equipment;
+}
+
+export async function addEquipment(input: Omit<Equipment, 'id' | 'availability'>): Promise<Equipment> {
+  const db = await getDb();
+  const newEquipment: Equipment = {
+    id: `eq-${Date.now()}`,
+    ...input,
+    availability: true,
+  };
+  await db.collection<Equipment>(COL.equipment).insertOne(newEquipment as Equipment & { _id?: unknown });
+  return newEquipment;
+}
+
+export async function deleteEquipment(id: string): Promise<void> {
+  if (!id) throw new Error('ID is required');
+  const db = await getDb();
+  const result = await db.collection(COL.equipment).deleteOne({ id });
+  if (result.deletedCount === 0) throw new Error('Equipment not found');
+}
+
+// ── Bookings ──────────────────────────────────────────────────────────────────
+export async function getBookings(): Promise<Booking[]> {
+  const db = await getDb();
+  const bookings = await db
+    .collection<Booking>(COL.bookings)
+    .find()
+    .sort({ createdAt: -1 })
+    .toArray();
+
+  // Auto-expire: pending bookings overdue by more than 24 hours → Completed
+  const now = Date.now();
   const gracePeriodMs = 24 * 60 * 60 * 1000;
-  data.bookings = data.bookings.map((booking) => {
-    if (booking.status === 'Pending') {
-      const endDate = new Date(booking.endDate);
-      const msOverdue = now.getTime() - endDate.getTime();
-      if (msOverdue > gracePeriodMs) {
-        return { ...booking, status: 'Completed' as Booking['status'] };
+
+  const processed = bookings.map((b) => {
+    if (b.status === 'Pending') {
+      const overdue = now - new Date(b.endDate).getTime();
+      if (overdue > gracePeriodMs) {
+        // Fire-and-forget update (don't await — keeps response fast)
+        void db
+          .collection<Booking>(COL.bookings)
+          .updateOne({ id: b.id }, { $set: { status: 'Completed' } });
+        return { ...b, status: 'Completed' as Booking['status'] };
       }
     }
-    return booking;
+    return b;
   });
-}
 
-function syncDerivedData(data: DbData) {
-  autoExpireOldBookings(data);
-  syncEquipmentAvailability(data);
-  data.stats = calculateStats(data);
-}
-
-export async function readDb(): Promise<DbData> {
-  const fileContents = await fs.readFile(DB_PATH, 'utf-8');
-  const data = JSON.parse(fileContents) as DbData;
-  syncDerivedData(data);
-  return data;
-}
-
-export async function writeDb(data: DbData) {
-  syncDerivedData(data);
-  await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
-}
-
-export async function getEquipment() {
-  const data = await readDb();
-  return data.equipment;
-}
-
-export async function getEquipmentById(id: string) {
-  const equipment = await getEquipment();
-  return equipment.find((item) => item.id === id) ?? null;
-}
-
-export async function getBookings() {
-  const data = await readDb();
-  return data.bookings;
-}
-
-export async function getStats() {
-  const data = await readDb();
-  return data.stats;
+  return processed.map(({ _id: _ignored, ...rest }) => rest) as Booking[];
 }
 
 export type CreateBookingInput = {
@@ -124,13 +129,13 @@ export type CreateBookingInput = {
   notes?: string;
 };
 
-export async function createBooking(input: CreateBookingInput) {
-  const data = await readDb();
-  const equipment = data.equipment.find((item) => item.id === input.equipmentId);
+export async function createBooking(input: CreateBookingInput): Promise<Booking> {
+  const db = await getDb();
+  const equipment = await db
+    .collection<Equipment>(COL.equipment)
+    .findOne({ id: input.equipmentId });
 
-  if (!equipment) {
-    throw new Error('Equipment not found');
-  }
+  if (!equipment) throw new Error('Equipment not found');
 
   const newBooking: Booking = {
     id: createEntityId('BK'),
@@ -151,117 +156,139 @@ export async function createBooking(input: CreateBookingInput) {
     notes: input.notes?.trim(),
   };
 
-  data.bookings.unshift(newBooking);
-  await writeDb(data);
-
+  await db.collection(COL.bookings).insertOne({ ...newBooking });
   return newBooking;
 }
 
-export async function updateBookingStatus(id: string, status: Booking['status']) {
-  const raw = await fs.readFile(DB_PATH, 'utf-8');
-  const data = JSON.parse(raw) as DbData;
-  const bookingIndex = data.bookings.findIndex((item) => item.id === id);
-
-  if (bookingIndex === -1) {
-    throw new Error('Booking not found');
-  }
-
-  const updatedBooking: Booking = {
-    ...data.bookings[bookingIndex],
-    status,
-  };
-
-  data.bookings[bookingIndex] = updatedBooking;
-  // Sync derived data AFTER setting the explicit status so auto-expire
-  // does not override the admin's chosen status during the same write.
-  syncDerivedData(data);
-  await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
-
-  return updatedBooking;
+export async function updateBookingStatus(
+  id: string,
+  status: Booking['status'],
+): Promise<Booking> {
+  const db = await getDb();
+  const result = await db
+    .collection<Booking>(COL.bookings)
+    .findOneAndUpdate(
+      { id },
+      { $set: { status } },
+      { returnDocument: 'after' },
+    );
+  if (!result) throw new Error('Booking not found');
+  const { _id: _ignored, ...rest } = result as Booking & { _id?: unknown };
+  return rest as Booking;
 }
 
+// ── Stats ─────────────────────────────────────────────────────────────────────
+export async function getStats(): Promise<Stats> {
+  const [equipmentList, bookings] = await Promise.all([
+    getEquipment(),
+    getBookings(),
+  ]);
+
+  const totalMachines = equipmentList.reduce((s, e) => s + (e.stock ?? 1), 0);
+  const reservedUnits = equipmentList.reduce((s, item) => {
+    return (
+      s +
+      bookings.filter(
+        (b) =>
+          (b.equipmentId === item.id || b.equipment === item.name) &&
+          RESERVED_BOOKING_STATUSES.includes(b.status),
+      ).length
+    );
+  }, 0);
+
+  const activeBookings = bookings.filter((b) =>
+    RESERVED_BOOKING_STATUSES.includes(b.status),
+  ).length;
+
+  const totalRevenue = bookings
+    .filter((b) => REVENUE_BOOKING_STATUSES.includes(b.status))
+    .reduce((s, b) => s + b.total, 0);
+
+  return {
+    totalRevenue,
+    activeBookings,
+    utilization: totalMachines > 0 ? Math.round((reservedUnits / totalMachines) * 100) : 0,
+  };
+}
+
+// ── Enquiries ─────────────────────────────────────────────────────────────────
 export async function createInquiry(input: {
   name: string;
   phone: string;
   industry: string;
   message: string;
 }) {
-  const data = await readDb();
+  const db = await getDb();
   const newInquiry = {
     id: createEntityId('ENQ'),
     ...input,
     createdAt: new Date().toISOString(),
   };
-
-  if (!data.enquiries) data.enquiries = [];
-  data.enquiries.unshift(newInquiry);
-  await writeDb(data);
-
+  await db.collection(COL.enquiries).insertOne({ ...newInquiry });
   return newInquiry;
 }
 
-export async function updateEquipment(id: string, updates: Partial<Equipment>) {
-  if (!id) throw new Error('ID is required');
-  const data = await readDb();
-  const targetId = id.trim();
-  const index = data.equipment.findIndex((item) => item.id.toLowerCase() === targetId.toLowerCase());
-
-  if (index === -1) {
-    throw new Error('Equipment not found');
-  }
-
-  data.equipment[index] = {
-    ...data.equipment[index],
-    ...updates,
-  };
-
-  await writeDb(data);
-  return data.equipment[index];
+export async function getEnquiries() {
+  const db = await getDb();
+  const docs = await db
+    .collection(COL.enquiries)
+    .find()
+    .sort({ createdAt: -1 })
+    .toArray();
+  return docs.map(({ _id: _ignored, ...rest }) => rest);
 }
 
-export async function addEquipment(input: Omit<Equipment, 'id' | 'availability'>) {
-  const data = await readDb();
-  const newEquipment: Equipment = {
-    id: `eq-${Date.now()}`,
-    ...input,
-    availability: true,
-  };
-
-  data.equipment.push(newEquipment);
-  await writeDb(data);
-  return newEquipment;
-}
-
-export async function deleteEquipment(id: string) {
-  if (!id) throw new Error('ID is required');
-  const data = await readDb();
-  const targetId = id.trim();
-  const index = data.equipment.findIndex((item) => item.id.toLowerCase() === targetId.toLowerCase());
-
-  if (index === -1) {
-    throw new Error('Equipment not found');
-  }
-
-  data.equipment.splice(index, 1);
-  await writeDb(data);
-}
-
+// ── Gallery ───────────────────────────────────────────────────────────────────
 export async function getGallery() {
-  const data = await readDb();
-  return data.gallery || [];
+  const db = await getDb();
+  const docs = await db
+    .collection(COL.gallery)
+    .find()
+    .sort({ createdAt: -1 })
+    .toArray();
+  return docs.map(({ _id: _ignored, ...rest }) => rest);
 }
 
-export async function addGalleryItem(input: { imageUrl: string; title: string; location: string }) {
-  const data = await readDb();
-  if (!data.gallery) data.gallery = [];
-  
+export async function addGalleryItem(input: {
+  imageUrl: string;
+  title: string;
+  location: string;
+}) {
+  const db = await getDb();
   const newItem = {
     id: `gal-${Date.now()}`,
     ...input,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
   };
-  
-  data.gallery.unshift(newItem);
-  await writeDb(data);
+  await db.collection(COL.gallery).insertOne({ ...newItem });
   return newItem;
+}
+
+// ── Seed (one-time migration from db.json) ────────────────────────────────────
+export async function seedFromJson(data: {
+  equipment: Equipment[];
+  bookings: Booking[];
+  enquiries?: unknown[];
+  gallery?: unknown[];
+}) {
+  const db = await getDb();
+
+  const eqCount = await db.collection(COL.equipment).countDocuments();
+  if (eqCount === 0 && data.equipment.length > 0) {
+    await db.collection(COL.equipment).insertMany(data.equipment as unknown as Document[]);
+  }
+
+  const bkCount = await db.collection(COL.bookings).countDocuments();
+  if (bkCount === 0 && data.bookings.length > 0) {
+    await db.collection(COL.bookings).insertMany(data.bookings as unknown as Document[]);
+  }
+
+  if (data.enquiries && data.enquiries.length > 0) {
+    const enqCount = await db.collection(COL.enquiries).countDocuments();
+    if (enqCount === 0) {
+      await db.collection(COL.enquiries).insertMany(data.enquiries as unknown as Document[]);
+    }
+  }
+
+  return { ok: true };
 }

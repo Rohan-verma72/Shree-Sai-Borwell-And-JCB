@@ -1,7 +1,17 @@
 import { NextResponse } from 'next/server';
-import { createInquiry } from '@/data/db';
+import { createInquiry, getEnquiries } from '@/data/db';
 import { applyRateLimit } from '@/lib/rate-limit';
 import { validateInquiryPayload } from '@/lib/validation';
+
+export async function GET() {
+  try {
+    const enquiries = await getEnquiries();
+    return NextResponse.json(enquiries);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch enquiries';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -24,3 +34,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
