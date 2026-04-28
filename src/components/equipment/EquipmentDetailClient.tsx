@@ -888,13 +888,13 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
         }
 
         .form-group input, .form-group select, .form-group textarea {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid var(--border-color);
-          padding: 0.75rem 1rem;
+          background: #1a2231;
+          border: 1px solid #3d4a62;
+          padding: 0.8rem 1rem;
           border-radius: 8px;
-          color: #fff;
+          color: #ffffff;
           font-family: inherit;
-          font-size: 1rem;
+          font-size: 16px;
           width: 100%;
           box-sizing: border-box;
           -webkit-appearance: none;
@@ -905,6 +905,17 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
           border-color: var(--primary);
           outline: none;
+          background: #252e3f;
+        }
+
+        /* Fix for browser autofill making inputs invisible on mobile */
+        .form-group input:-webkit-autofill,
+        .form-group input:-webkit-autofill:hover, 
+        .form-group input:-webkit-autofill:focus, 
+        .form-group input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px #1a2231 inset !important;
+            -webkit-text-fill-color: #ffffff !important;
+            transition: background-color 5000s ease-in-out 0s;
         }
 
         .estimate-box {
