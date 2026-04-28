@@ -110,214 +110,174 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
 
     const win = window.open('', '_blank');
     if (!win) return;
-
     win.document.write(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
   <title>Booking Receipt — ${bookingId}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    *{margin:0;padding:0;box-sizing:border-box;}
-    body{font-family:'Inter',Arial,sans-serif;background:#f4f4f4;padding:40px 16px 60px;color:#1a1a1a;font-size:14px;}
-
-    .page{max-width:680px;margin:0 auto;background:#fff;box-shadow:0 2px 16px rgba(0,0,0,0.08);}
-
-    /* Gold top bar */
-    .top-bar{height:5px;background:linear-gradient(90deg,#c9a800,#f7ca00,#c9a800);}
-
-    /* Header */
-    .header{padding:28px 36px 20px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #e8e8e8;}
-    .co-name{font-size:1.15rem;font-weight:700;color:#b8860b;letter-spacing:0.02em;}
-    .co-sub{font-size:0.72rem;color:#888;margin-top:3px;}
-    .co-contact{font-size:0.78rem;color:#555;margin-top:10px;line-height:1.7;}
-    .receipt-meta{text-align:right;}
-    .receipt-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.14em;color:#aaa;margin-bottom:6px;}
-    .receipt-id{font-family:monospace;font-size:0.95rem;font-weight:700;color:#111;background:#f5f5f5;border:1px solid #e0e0e0;padding:4px 10px;border-radius:4px;display:inline-block;}
-    .receipt-date{font-size:0.78rem;color:#777;margin-top:6px;line-height:1.6;}
-
-    /* Status */
-    .status-bar{background:#fffbeb;border-top:1px solid #fde68a;border-bottom:1px solid #fde68a;padding:8px 36px;font-size:0.75rem;color:#92400e;display:flex;align-items:center;gap:8px;}
-    .status-dot{width:7px;height:7px;border-radius:50%;background:#d97706;flex-shrink:0;}
-
-    /* Body */
-    .body{padding:24px 36px;}
-
-    /* Info section */
-    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
-    .info-block{padding:14px 16px;background:#fafafa;border:1px solid #efefef;border-radius:4px;}
-    .info-title{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.12em;color:#aaa;font-weight:600;margin-bottom:10px;}
-    .info-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f0f0f0;font-size:0.8rem;}
-    .info-row:last-child{border-bottom:none;}
-    .info-lbl{color:#888;}
-    .info-val{color:#111;font-weight:600;text-align:right;}
-
-    /* Table */
-    .section-label{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.12em;color:#aaa;font-weight:600;margin-bottom:8px;}
-    table{width:100%;border-collapse:collapse;border:1px solid #ebebeb;margin-bottom:20px;font-size:0.82rem;}
-    thead{background:#1a1a1a;}
-    th{padding:10px 14px;text-align:left;font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#f0f0f0;}
-    th.amt{text-align:right;}
-    tbody tr{border-bottom:1px solid #f0f0f0;}
-    td{padding:12px 14px;color:#333;vertical-align:top;}
-    td.amt{text-align:right;font-weight:600;color:#111;}
-    .item-name{font-weight:600;color:#111;}
-    .item-sub{font-size:0.75rem;color:#999;margin-top:2px;}
-
-    /* Total */
-    .total-section{display:flex;justify-content:flex-end;margin-bottom:20px;}
-    .total-box{border:1px solid #e0e0e0;border-top:2px solid #c9a800;padding:14px 20px;min-width:260px;}
-    .total-line{display:flex;justify-content:space-between;font-size:0.8rem;color:#777;padding:3px 0;}
-    .total-final{display:flex;justify-content:space-between;padding-top:8px;margin-top:6px;border-top:1px solid #ddd;}
-    .total-final span{font-size:0.88rem;font-weight:600;color:#333;}
-    .total-final strong{font-size:1.15rem;font-weight:700;color:#111;}
-
-    /* Notes */
-    .notes{background:#fffbeb;border:1px solid #fde68a;padding:12px 14px;margin-bottom:16px;border-radius:3px;}
-    .notes .nt{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:#92400e;font-weight:600;margin-bottom:4px;}
-    .notes p{font-size:0.8rem;color:#78350f;}
-
-    /* Disclaimer */
-    .disclaimer{font-size:0.75rem;color:#999;line-height:1.6;padding:12px 0;border-top:1px solid #efefef;}
-
-    /* Footer */
-    .footer{padding:16px 36px;border-top:1px solid #e8e8e8;display:flex;justify-content:space-between;align-items:center;background:#fafafa;}
-    .footer-left{font-size:0.72rem;color:#888;line-height:1.7;}
-    .footer-left strong{color:#555;}
-    .footer-right{font-size:0.68rem;color:#bbb;text-align:right;}
-
-    /* Print buttons */
-    .btn-row{text-align:center;padding:20px 16px;display:flex;gap:12px;justify-content:center;}
-    .btn-print{background:#1a1a1a;color:#fff;border:none;padding:11px 24px;font-size:0.88rem;font-weight:600;cursor:pointer;border-radius:4px;letter-spacing:0.02em;}
-    .btn-wa{background:#25D366;color:#fff;border:none;padding:11px 24px;font-size:0.88rem;font-weight:600;cursor:pointer;border-radius:4px;text-decoration:none;letter-spacing:0.02em;}
-
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+    body{font-family:'Inter',sans-serif;background:#eef1f6;padding:20px;color:#1a202c;}
+    
+    .page{max-width:720px;margin:0 auto;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.08);border-radius:12px;overflow:hidden;}
+    
+    .header{background:#0f141d;color:#fff;padding:32px;display:flex;justify-content:space-between;align-items:center;border-bottom:4px solid #f7c948;}
+    .header-left h1{font-family:'Outfit',sans-serif;color:#f7c948;font-size:24px;margin-bottom:4px;letter-spacing:0.5px;}
+    .header-left p{color:#9ca8be;font-size:12px;margin-bottom:8px;}
+    .header-left .contact{font-size:13px;color:#cbd5e1;line-height:1.5;}
+    .header-right{text-align:right;}
+    .receipt-title{font-family:'Outfit',sans-serif;font-size:28px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
+    .receipt-id{background:rgba(247,201,72,0.15);color:#f7c948;padding:6px 12px;border-radius:6px;font-weight:600;font-size:14px;display:inline-block;border:1px solid rgba(247,201,72,0.3);}
+    
+    .status-banner{background:#fffbeb;padding:12px 32px;border-bottom:1px solid #fde68a;display:flex;align-items:center;gap:10px;font-size:13px;color:#b45309;font-weight:500;}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,0.2);}
+    
+    .body-content{padding:32px;}
+    
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;}
+    .card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px;}
+    .card-title{font-family:'Outfit',sans-serif;font-size:14px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+    .row{display:flex;flex-direction:column;margin-bottom:12px;}
+    .row:last-child{margin-bottom:0;}
+    .lbl{font-size:12px;color:#64748b;margin-bottom:4px;}
+    .val{font-size:14px;color:#0f141d;font-weight:600;}
+    
+    .table-wrap{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;margin-bottom:24px;min-width:400px;}
+    th{background:#f1f5f9;color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding:12px 16px;text-align:left;font-weight:600;}
+    th.right, td.right{text-align:right;}
+    td{padding:16px;border-bottom:1px solid #e2e8f0;font-size:14px;color:#334155;vertical-align:top;}
+    .item-title{font-weight:600;color:#0f141d;font-size:15px;margin-bottom:4px;}
+    .item-sub{font-size:13px;color:#64748b;}
+    
+    .total-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:24px;width:100%;max-width:320px;margin-left:auto;}
+    .t-row{display:flex;justify-content:space-between;margin-bottom:12px;font-size:14px;color:#64748b;}
+    .t-row.final{margin-top:16px;padding-top:16px;border-top:1px dashed #cbd5e1;font-size:18px;color:#0f141d;font-weight:700;}
+    
+    .notes{background:#f0f9ff;border-left:4px solid #0ea5e9;padding:16px;border-radius:4px;margin-top:32px;font-size:13px;color:#0369a1;line-height:1.6;}
+    
+    .footer{text-align:center;padding:24px 32px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;line-height:1.6;}
+    
+    .actions{display:flex;gap:12px;justify-content:center;padding:0 0 24px 0;}
+    .btn{padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;transition:0.2s;}
+    .btn-print{background:#0f141d;color:#fff;}
+    .btn-print:hover{background:#1e293b;}
+    .btn-wa{background:#22c55e;color:#fff;}
+    .btn-wa:hover{background:#16a34a;}
+    
+    @media(max-width:600px){
+      body{padding:12px;}
+      .header{flex-direction:column;align-items:flex-start;gap:20px;padding:24px;}
+      .header-right{text-align:left;}
+      .grid{grid-template-columns:1fr;gap:16px;margin-bottom:24px;}
+      .body-content{padding:20px;}
+      .total-box{max-width:100%;}
+      th:nth-child(1), td:nth-child(1){display:none;}
+      th, td{padding:12px 10px;}
+      .actions{flex-direction:column;}
+      .btn{width:100%;}
+    }
     @media print{
       body{background:#fff;padding:0;}
-      .page{box-shadow:none;}
-      .btn-row{display:none!important;}
-    }
-    @media(max-width:600px){
-      .header,.body,.footer,.status-bar{padding-left:20px;padding-right:20px;}
-      .info-grid{grid-template-columns:1fr;}
-      .total-section{justify-content:stretch;}
-      .total-box{min-width:0;width:100%;}
+      .page{box-shadow:none;border-radius:0;}
+      .actions{display:none!important;}
     }
   </style>
 </head>
 <body>
-<div class="page">
-  <div class="top-bar"></div>
-
-  <div class="header">
-    <div>
-      <div class="co-name">${BUSINESS_DETAILS.brandName}</div>
-      <div class="co-sub">Equipment Rental &amp; Borewell Services</div>
-      <div class="co-contact">
-        Tel: ${BUSINESS_DETAILS.phone}<br/>
-        ${BUSINESS_DETAILS.address}<br/>
-        GSTIN: ${BUSINESS_DETAILS.gstin}
-      </div>
-    </div>
-    <div class="receipt-meta">
-      <div class="receipt-label">Booking Receipt</div>
-      <div class="receipt-id">${bookingId}</div>
-      <div class="receipt-date">
-        Date: ${format(new Date(), 'dd MMM yyyy')}<br/>
-        Time: ${format(new Date(), 'hh:mm a')}
-      </div>
-    </div>
+  <div class="actions">
+    <a class="btn btn-wa" href="https://wa.me/${BUSINESS_DETAILS.phone.replace(/[^0-9]/g,'')}?text=${waMsg}" target="_blank">💬 Share on WhatsApp</a>
+    <button class="btn btn-print" onclick="window.print()">🖨️ Print Receipt</button>
   </div>
-
-  <div class="status-bar">
-    <div class="status-dot"></div>
-    <span>Status: <strong>Pending Confirmation</strong> &mdash; Our team will call you within 2 hours.</span>
-  </div>
-
-  <div class="body">
-
-    <div class="info-grid">
-      <div class="info-block">
-        <div class="info-title">Customer Details</div>
-        <div class="info-row"><span class="info-lbl">Name</span><span class="info-val">${bookingData.customer}</span></div>
-        <div class="info-row"><span class="info-lbl">Phone</span><span class="info-val">${bookingData.phone}</span></div>
-        <div class="info-row"><span class="info-lbl">Category</span><span class="info-val">${bookingData.customerType}</span></div>
+  
+  <div class="page">
+    <div class="header">
+      <div class="header-left">
+        <h1>${BUSINESS_DETAILS.brandName}</h1>
+        <p>Heavy Equipment Rental & Borewell Services</p>
+        <div class="contact">
+          Tel: ${BUSINESS_DETAILS.phone}<br/>
+          GSTIN: ${BUSINESS_DETAILS.gstin}
+        </div>
       </div>
-      <div class="info-block">
-        <div class="info-title">Booking Details</div>
-        <div class="info-row"><span class="info-lbl">Start Date</span><span class="info-val">${format(new Date(bookingData.startDate), 'dd MMM yyyy')}</span></div>
-        ${bookingData.bookingType !== 'Hourly' ? `<div class="info-row"><span class="info-lbl">End Date</span><span class="info-val">${format(new Date(bookingData.endDate), 'dd MMM yyyy')}</span></div>` : ''}
-        <div class="info-row"><span class="info-lbl">Billing Type</span><span class="info-val">${bookingData.bookingType}</span></div>
-        <div class="info-row"><span class="info-lbl">Duration</span><span class="info-val">${duration}</span></div>
-      </div>
-    </div>
-
-    <div class="section-label">Service &amp; Charges</div>
-    <table>
-      <thead>
-        <tr>
-          <th style="width:32px">#</th>
-          <th>Description</th>
-          <th>Rate</th>
-          <th>Qty</th>
-          <th class="amt">Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>01</td>
-          <td>
-            <div class="item-name">${equipment.name}</div>
-            <div class="item-sub">${equipment.type} &nbsp;&bull;&nbsp; ${equipment.location}</div>
-          </td>
-          <td>${rateLabel}</td>
-          <td>${qty}</td>
-          <td class="amt">Rs. ${currentTotal.toLocaleString('en-IN')}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="total-section">
-      <div class="total-box">
-        <div class="total-line"><span>Subtotal</span><span>Rs. ${currentTotal.toLocaleString('en-IN')}</span></div>
-        <div class="total-line"><span>GST / Taxes</span><span>As applicable</span></div>
-        <div class="total-final">
-          <span>Total (Estimated)</span>
-          <strong>Rs. ${currentTotal.toLocaleString('en-IN')}</strong>
+      <div class="header-right">
+        <div class="receipt-title">RECEIPT</div>
+        <div class="receipt-id">${bookingId}</div>
+        <div style="margin-top:12px;font-size:13px;color:#cbd5e1;">
+          Date: ${format(new Date(), 'dd MMM yyyy')}<br/>
+          Time: ${format(new Date(), 'hh:mm a')}
         </div>
       </div>
     </div>
-
-    ${bookingData.notes ? `
-    <div class="notes">
-      <div class="nt">Site / Notes</div>
-      <p>${bookingData.notes}</p>
-    </div>` : ''}
-
-    <div class="disclaimer">
-      <strong>Note:</strong> This is a booking request receipt, not a final tax invoice. The final amount may vary based on actual site conditions and work hours. Payment is collected after service completion. This receipt is computer-generated and does not require a signature.
+    
+    <div class="status-banner">
+      <div class="status-dot"></div>
+      <span><strong>Pending Confirmation</strong> — Our team will contact you within 2 hours.</span>
     </div>
-
+    
+    <div class="body-content">
+      <div class="grid">
+        <div class="card">
+          <div class="card-title">Customer Details</div>
+          <div class="row"><span class="lbl">Name</span><span class="val">${bookingData.customer}</span></div>
+          <div class="row"><span class="lbl">Phone</span><span class="val">${bookingData.phone}</span></div>
+          <div class="row"><span class="lbl">Category</span><span class="val">${bookingData.customerType}</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Booking Info</div>
+          <div class="row"><span class="lbl">Start Date</span><span class="val">${format(new Date(bookingData.startDate), 'dd MMM yyyy')}</span></div>
+          ${bookingData.bookingType !== 'Hourly' ? `<div class="row"><span class="lbl">End Date</span><span class="val">${format(new Date(bookingData.endDate), 'dd MMM yyyy')}</span></div>` : ''}
+          <div class="row"><span class="lbl">Billing Type</span><span class="val">${bookingData.bookingType}</span></div>
+          <div class="row"><span class="lbl">Duration</span><span class="val">${duration}</span></div>
+        </div>
+      </div>
+      
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px">#</th>
+              <th>Description</th>
+              <th>Rate</th>
+              <th>Qty</th>
+              <th class="right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>01</td>
+              <td>
+                <div class="item-title">${equipment.name}</div>
+                <div class="item-sub">${equipment.type} &bull; ${equipment.location}</div>
+              </td>
+              <td>${rateLabel}</td>
+              <td>${qty}</td>
+              <td class="right" style="font-weight:600;color:#0f141d;">Rs. ${currentTotal.toLocaleString('en-IN')}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="total-box">
+        <div class="t-row"><span>Subtotal</span><span>Rs. ${currentTotal.toLocaleString('en-IN')}</span></div>
+        <div class="t-row"><span>Taxes</span><span>As applicable</span></div>
+        <div class="t-row final"><span>Total (Est.)</span><span style="color:#000;">Rs. ${currentTotal.toLocaleString('en-IN')}</span></div>
+      </div>
+      
+      ${bookingData.notes ? `
+      <div class="notes">
+        <strong>Site Location / Notes:</strong><br/>
+        ${bookingData.notes}
+      </div>` : ''}
+      
+    </div>
+    
+    <div class="footer">
+      This is a system-generated booking request receipt, not a final tax invoice. Final billing may vary based on actual work hours and site conditions. Payment is collected post-service. No signature is required.
+    </div>
   </div>
-
-  <div class="footer">
-    <div class="footer-left">
-      <strong style="color:#b8860b;">${BUSINESS_DETAILS.brandName}</strong><br/>
-      ${BUSINESS_DETAILS.phone} &nbsp;|&nbsp; ${BUSINESS_DETAILS.supportHours}
-    </div>
-    <div class="footer-right">
-      Computer Generated<br/>
-      No Signature Required
-    </div>
-  </div>
-</div>
-
-<div class="btn-row">
-  <button class="btn-print" onclick="window.print()">Print / Save as PDF</button>
-  <a class="btn-wa" href="https://wa.me/${BUSINESS_DETAILS.phone.replace(/[^0-9]/g,'')}?text=${waMsg}" target="_blank">Share on WhatsApp</a>
-</div>
-
-<script>setTimeout(()=>window.print(),700);</script>
 </body>
 </html>`);
     win.document.close();
