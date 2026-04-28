@@ -79,18 +79,9 @@ export default function WelcomeScreen() {
               </div>
             </button>
 
-            <button
-              className="ws-btn ws-btn-secondary"
-              onClick={() => go('/admin/login')}
-            >
-              <div className="ws-btn-icon">
-                <Lock size={20} strokeWidth={2} />
-              </div>
-              <div className="ws-btn-body">
-                <strong>Admin Login</strong>
-                <small>For Staff</small>
-              </div>
-            </button>
+            <div className="ws-btn ws-btn-secondary" style={{ display: 'none' }}>
+              {/* Admin button hidden */}
+            </div>
           </div>
 
           {/* Footer */}

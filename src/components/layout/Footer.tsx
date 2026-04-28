@@ -13,6 +13,7 @@ import {
   Phone,
   Send,
   Users,
+  Lock,
 } from 'lucide-react';
 import { BUSINESS_DETAILS } from '@/data/business';
 import { BUSINESS_LINKS, buildWhatsAppLink } from '@/lib/business';
@@ -150,6 +151,9 @@ export default function Footer() {
           <div className="bottom-links">
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms & Conditions</Link>
+            <Link href="/admin/login" style={{ opacity: 0.15, marginLeft: '12px', display: 'inline-flex', alignItems: 'center' }} aria-label="Admin">
+              <Lock size={12} />
+            </Link>
           </div>
         </div>
       </div>
