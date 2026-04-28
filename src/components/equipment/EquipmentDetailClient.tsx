@@ -34,7 +34,7 @@ export default function EquipmentDetailClient({ equipment }: EquipmentDetailClie
   const [showBookingForm, setShowBookingForm] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [success, setSuccess] = React.useState(false);
-  const [confirmedBookingId, setConfirmedBookingId] = React.useState<string | null>(null);
+  const [confirmedBookingId, setConfirmedBookingId] = React.useState<string>('');
 
   // Lock body scroll when modal is open to prevent background scrolling on mobile
   useEffect(() => {
